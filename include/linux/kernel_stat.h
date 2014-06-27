@@ -16,6 +16,8 @@
  * used by rstatd/perfmeter
  */
 
+// Used for ondemandX GOV
+// Usage of cpustat : cpustat[CPUTIME_"name"]
 enum cpu_usage_stat {
 	CPUTIME_USER,
 	CPUTIME_NICE,
@@ -49,6 +51,7 @@ DECLARE_PER_CPU(struct kernel_cpustat, kernel_cpustat);
 #define kstat_this_cpu (&__get_cpu_var(kstat))
 #define kcpustat_this_cpu (&__get_cpu_var(kernel_cpustat))
 #define kstat_cpu(cpu) per_cpu(kstat, cpu)
+// Used for ondemandX GOV
 #define kcpustat_cpu(cpu) per_cpu(kernel_cpustat, cpu)
 
 extern unsigned long long nr_context_switches(void);
