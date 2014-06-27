@@ -1,5 +1,8 @@
 /* Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
  *
+ * Modified by jollaman999
+ * (Disable 'AXI: msm_bus_scale_client_update_request(): Client "n" passed invalid index: "n" Error Log Message)
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
  * only version 2 as published by the Free Software Foundation.
@@ -580,8 +583,9 @@ int msm_bus_scale_client_update_request(uint32_t cl, unsigned index)
 	}
 
 	if (index >= pdata->num_usecases) {
-		MSM_BUS_ERR("Client %u passed invalid index: %d\n",
-			(uint32_t)client, index);
+    // jollaman999
+	  /* Disable 'AXI: msm_bus_scale_client_update_request(): Client "n" passed invalid index: "n" Error Log Message */
+		// MSM_BUS_ERR("Client %u passed invalid index: %d\n", (uint32_t)client, index);
 		ret = -ENXIO;
 		goto err;
 	}
