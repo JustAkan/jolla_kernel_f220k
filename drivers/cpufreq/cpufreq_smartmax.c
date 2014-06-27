@@ -1,6 +1,8 @@
 /*
  * drivers/cpufreq/cpufreq_smartmax.c
  *
+ * Modified for kernel_lge_gproj by jollaman999 (Modified DEFAULT Tunable parameters)
+ *
  * Copyright (C) 2013 maxwen
  *
  * This program is free software; you can redistribute it and/or modify
@@ -52,12 +54,14 @@
  * lowering the frequency towards the ideal frequency is faster than below it.
  */
 
-#define GOV_IDLE_FREQ 594000
+// #define GOV_IDLE_FREQ 594000
 
-#define DEFAULT_SUSPEND_IDEAL_FREQ GOV_IDLE_FREQ
+// #define DEFAULT_SUSPEND_IDEAL_FREQ GOV_IDLE_FREQ
+#define DEFAULT_SUSPEND_IDEAL_FREQ 81000
 static unsigned int suspend_ideal_freq;
 
-#define DEFAULT_AWAKE_IDEAL_FREQ GOV_IDLE_FREQ
+// #define DEFAULT_AWAKE_IDEAL_FREQ GOV_IDLE_FREQ
+#define DEFAULT_AWAKE_IDEAL_FREQ 1026000
 static unsigned int awake_ideal_freq;
 
 /*
@@ -65,7 +69,8 @@ static unsigned int awake_ideal_freq;
  * Zero disables and causes to always jump straight to max frequency.
  * When below the ideal freqeuncy we always ramp up to the ideal freq.
  */
-#define DEFAULT_RAMP_UP_STEP 300000
+// #define DEFAULT_RAMP_UP_STEP 300000
+#define DEFAULT_RAMP_UP_STEP 8000
 static unsigned int ramp_up_step;
 
 /*
@@ -73,7 +78,8 @@ static unsigned int ramp_up_step;
  * Zero disables and will calculate ramp down according to load heuristic.
  * When above the ideal freqeuncy we always ramp down to the ideal freq.
  */
-#define DEFAULT_RAMP_DOWN_STEP 150000
+// #define DEFAULT_RAMP_DOWN_STEP 150000
+#define DEFAULT_RAMP_DOWN_STEP 10000
 static unsigned int ramp_down_step;
 
 /*
@@ -85,14 +91,16 @@ static unsigned int max_cpu_load;
 /*
  * CPU freq will be decreased if measured load < min_cpu_load;
  */
-#define DEFAULT_MIN_CPU_LOAD 50
+// #define DEFAULT_MIN_CPU_LOAD 50
+#define DEFAULT_MIN_CPU_LOAD 35
 static unsigned int min_cpu_load;
 
 /*
  * The minimum amount of time in nsecs to spend at a frequency before we can ramp up.
  * Notice we ignore this when we are below the ideal frequency.
  */
-#define DEFAULT_UP_RATE 40000
+// #define DEFAULT_UP_RATE 40000
+#define DEFAULT_UP_RATE 28000
 static unsigned int up_rate;
 
 /*
@@ -103,7 +111,8 @@ static unsigned int up_rate;
 static unsigned int down_rate;
 
 /* in nsecs */
-#define DEFAULT_SAMPLING_RATE 40000
+// #define DEFAULT_SAMPLING_RATE 40000
+#define DEFAULT_SAMPLING_RATE 70000
 static unsigned int sampling_rate;
 
 /* in nsecs */
@@ -122,7 +131,8 @@ static bool ramp_up_during_boost = true;
  * external boost interface - boost if duration is written
  * to sysfs for boost_duration
  */
-static unsigned int boost_freq = 702000;
+// static unsigned int boost_freq = 702000;
+static unsigned int boost_freq = 1026000;
 static bool boost = true;
 
 /* in nsecs */
