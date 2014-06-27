@@ -1,5 +1,7 @@
 /* Copyright (c) 2010-2013, The Linux Foundation. All rights reserved.
  *
+ * Modified by jollaman999 (Diasble 'CPU"n" didn't collape within 1ms' Warning Log Message.)
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
  * only version 2 as published by the Free Software Foundation.
@@ -953,7 +955,9 @@ cpuidle_enter_bail:
 
 int msm_pm_wait_cpu_shutdown(unsigned int cpu)
 {
-	int timeout = 0;
+  // jollaman999
+	/* Diasble 'CPU"n" didn't collape within 1ms' Warning Log Message. */
+	// int timeout = 0;
 
 	if (!msm_pm_slp_sts)
 		return 0;
@@ -970,8 +974,9 @@ int msm_pm_wait_cpu_shutdown(unsigned int cpu)
 		if (acc_sts & msm_pm_slp_sts[cpu].mask)
 			return 0;
 		udelay(100);
-		WARN(++timeout == 10, "CPU%u didn't collape within 1ms\n",
-					cpu);
+		// jollaman999
+		/* Diasble 'CPU"n" didn't collape within 1ms' Warning Log Message. */
+		// WARN(++timeout == 10, "CPU%u didn't collape within 1ms\n", cpu);
 	}
 
 	return -EBUSY;
