@@ -283,13 +283,13 @@ _output_error:
 	return (int) (-(((char *) ip) - source));
 }
 
-int lz4_decompress(const char *src, size_t *src_len, char *dest,
+int lz4_decompress_dec(const char *src, size_t *src_len, char *dest,
 		size_t actual_dest_len)
 {
 	int ret = -1;
 	int input_len = 0;
 
-	input_len = lz4_uncompress(src, dest, actual_dest_len);
+	input_len = lz4_uncompress_dec(src, dest, actual_dest_len);
 	if (input_len < 0)
 		goto exit_0;
 	*src_len = input_len;
@@ -299,16 +299,16 @@ exit_0:
 	return ret;
 }
 #ifndef STATIC
-EXPORT_SYMBOL_GPL(lz4_decompress);
+EXPORT_SYMBOL_GPL(lz4_decompress_dec);
 #endif
 
-int lz4_decompress_unknownoutputsize(const char *src, size_t src_len,
+int lz4_decompress_unknownoutputsize_dec(const char *src, size_t src_len,
 		char *dest, size_t *dest_len)
 {
 	int ret = -1;
 	int out_len = 0;
 
-	out_len = lz4_uncompress_unknownoutputsize(src, dest, src_len,
+	out_len = lz4_uncompress_unknownoutputsize_dec(src, dest, src_len,
 					*dest_len);
 	if (out_len < 0)
 		goto exit_0;
@@ -319,7 +319,7 @@ exit_0:
 	return ret;
 }
 #ifndef STATIC
-EXPORT_SYMBOL_GPL(lz4_decompress_unknownoutputsize);
+EXPORT_SYMBOL_GPL(lz4_decompress_unknownoutputsize_dec);
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("LZ4 Decompressor");
