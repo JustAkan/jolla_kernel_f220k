@@ -26,7 +26,7 @@ HEAD	= head.o
 OBJS	+= misc.o decompress.o
 FONTC	= $(srctree)/drivers/video/console/font_acorn_8x8.c
 
-ifeq ($(CONFIG_KERNEL_LZ4),y)
+ifeq ($(CONFIG_KERNEL_LZO),y)
 CFLAGS_decompress.o := -Os
 endif
 
