@@ -289,7 +289,7 @@ int lz4_decompress_dec(const char *src, size_t *src_len, char *dest,
 	int ret = -1;
 	int input_len = 0;
 
-	input_len = lz4_uncompress_dec(src, dest, actual_dest_len);
+	input_len = lz4_uncompress(src, dest, actual_dest_len);
 	if (input_len < 0)
 		goto exit_0;
 	*src_len = input_len;
@@ -308,7 +308,7 @@ int lz4_decompress_unknownoutputsize_dec(const char *src, size_t src_len,
 	int ret = -1;
 	int out_len = 0;
 
-	out_len = lz4_uncompress_unknownoutputsize_dec(src, dest, src_len,
+	out_len = lz4_uncompress_unknownoutputsize(src, dest, src_len,
 					*dest_len);
 	if (out_len < 0)
 		goto exit_0;
