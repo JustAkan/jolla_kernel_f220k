@@ -360,6 +360,10 @@ static int cpufreq_parse_governor(char *str_governor, unsigned int *policy,
 		if (!strnicmp(str_governor, "performance", CPUFREQ_NAME_LEN)) {
 			*policy = CPUFREQ_POLICY_PERFORMANCE;
 			err = 0;
+		} else if (!strnicmp(str_governor, "powersave",
+						CPUFREQ_NAME_LEN)) {
+			*policy = CPUFREQ_POLICY_POWERSAVE;
+			err = 0;
 		}
 	} else if (cpufreq_driver->target) {
 		struct cpufreq_governor *t;
@@ -462,7 +466,9 @@ static ssize_t show_cpuinfo_cur_freq(struct cpufreq_policy *policy,
  */
 static ssize_t show_scaling_governor(struct cpufreq_policy *policy, char *buf)
 {
-	if (policy->policy == CPUFREQ_POLICY_PERFORMANCE)
+	if (policy->policy == CPUFREQ_POLICY_POWERSAVE)
+		return sprintf(buf, "powersave\n");
+	else if (policy->policy == CPUFREQ_POLICY_PERFORMANCE)
 		return sprintf(buf, "performance\n");
 	else if (policy->governor)
 		return scnprintf(buf, CPUFREQ_NAME_LEN, "%s\n",
@@ -526,7 +532,7 @@ static ssize_t show_scaling_available_governors(struct cpufreq_policy *policy,
 	struct cpufreq_governor *t;
 
 	if (!cpufreq_driver->target) {
-		i += sprintf(buf, "performance");
+		i += sprintf(buf, "performance powersave");
 		goto out;
 	}
 
@@ -1006,6 +1012,9 @@ err_out_kobj_put:
  * with with cpu hotplugging and all hell will break loose. Tried to clean this
  * mess up, but more thorough testing is needed. - Mathieu
  */
+#ifdef CONFIG_LGE_PM_LOW_BATT_CHG
+extern struct cpufreq_governor cpufreq_gov_powersave;
+#endif
 static int cpufreq_add_dev(struct device *dev, struct subsys_interface *sif)
 {
 	unsigned int cpu = dev->id;
@@ -1073,6 +1082,13 @@ static int cpufreq_add_dev(struct device *dev, struct subsys_interface *sif)
 #endif
 	if (!found)
 		policy->governor = CPUFREQ_DEFAULT_GOVERNOR;
+
+#ifdef CONFIG_LGE_PM_LOW_BATT_CHG
+	if (!found && lge_get_charger_logo_state()) {
+		policy->governor = &cpufreq_gov_powersave;
+		pr_info("During chargerlogo, cpu %d governor=gov_powersave\n", cpu);
+	}
+#endif
 
 	/* call driver. From then on the cpufreq must be able
 	 * to accept all calls to ->verify and ->setpolicy for this CPU
