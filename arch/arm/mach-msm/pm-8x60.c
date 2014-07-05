@@ -975,8 +975,8 @@ int msm_pm_wait_cpu_shutdown(unsigned int cpu)
 			return 0;
 		udelay(100);
 		// jollaman999
-		/* Diasble 'CPU"n" didn't collape within 1ms' Warning Log Message. */
-		// WARN(++timeout == 10, "CPU%u didn't collape within 1ms\n", cpu);
+		/* Diasble 'CPU"n" didn't collape within 2ms' Warning Log Message. */
+		// WARN(++timeout == 20, "CPU%u didn't collape within 2ms\n", cpu);
 	}
 
 	return -EBUSY;
