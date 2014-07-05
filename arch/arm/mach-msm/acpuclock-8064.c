@@ -307,7 +307,7 @@ static struct acpu_level tbl_faster[] __initdata = {
 	{ 0, { 0 } }
 };
 
-static struct pvs_table pvs_tables[NUM_SPEED_BINS][NUM_PVS] __initdata = {
+static struct pvs_table pvs_tables_jolla_kernel[NUM_SPEED_BINS][NUM_PVS] __initdata = {
 	[0][PVS_SLOW]    = {tbl_slow, sizeof(tbl_slow),     0 },
 	[0][PVS_NOMINAL] = {tbl_nom,  sizeof(tbl_nom),  25000 },
 	[0][PVS_FAST]    = {tbl_fast, sizeof(tbl_fast), 25000 },
@@ -320,7 +320,7 @@ static struct acpuclk_krait_params acpuclk_8064_params __initdata = {
 	.scalable = scalable,
 	.scalable_size = sizeof(scalable),
 	.hfpll_data = &hfpll_data,
-	.pvs_tables = pvs_tables,
+	.pvs_tables = pvs_tables_jolla_kernel,
 	.l2_freq_tbl = l2_freq_tbl,
 	.l2_freq_tbl_size = sizeof(l2_freq_tbl),
 	.bus_scale = &bus_scale_data,
@@ -331,6 +331,8 @@ static struct acpuclk_krait_params acpuclk_8064_params __initdata = {
 
 static int __init acpuclk_8064_probe(struct platform_device *pdev)
 {
+  pr_info("select jolla-kernel's CPU table\n");
+  acpuclk_8064_params.pvs_tables = pvs_tables_jolla_kernel;
 
 	if (cpu_is_apq8064ab() ||
 		SOCINFO_VERSION_MAJOR(socinfo_get_version()) == 2) {
