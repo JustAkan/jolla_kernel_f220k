@@ -916,13 +916,18 @@ void acpuclk_set_vdd(unsigned int khz, int vdd_uv) {
 
 		drv.acpu_freq_tbl[i].vdd_core = new_vdd_uv;
 	}
+	// jollaman999
 	pr_warn("jolla-kernel : user voltage table modified!\n");
 	mutex_unlock(&driver_lock);
 }
 #endif	/* CONFIG_CPU_VOTALGE_TABLE */
 
 #ifdef CONFIG_CPU_FREQ_MSM
-static struct cpufreq_frequency_table freq_table[NR_CPUS][35];
+// jollaman999
+// Downclock
+// cpufreq_frequency_table freq_table[NR_CPUS][n]
+// n = 35+(Downclock Table Values)
+static struct cpufreq_frequency_table freq_table[NR_CPUS][38];
 
 static void __init cpufreq_table_init(void)
 {
