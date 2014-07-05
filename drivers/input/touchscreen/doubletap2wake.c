@@ -60,7 +60,7 @@ MODULE_LICENSE("GPLv2");
 #define DT2W_DEBUG		0
 #define DT2W_DEFAULT		0
 
-#define DT2W_PWRKEY_DUR		60
+#define DT2W_PWRKEY_DUR		0
 #define DT2W_FEATHER		300
 #define DT2W_TIME		150
 
