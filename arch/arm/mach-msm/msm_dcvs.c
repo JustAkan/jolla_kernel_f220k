@@ -146,7 +146,10 @@ static struct dcvs_core core_list[CORES_MAX];
 
 static struct kobject *cores_kobj;
 
-#define DCVS_MAX_NUM_FREQS 15
+// jollaman999
+// Overclock
+// DCVS_MAX_NUM_FREQS = 15+(Overclock Table Values)
+#define DCVS_MAX_NUM_FREQS 22
 static struct msm_dcvs_freq_entry cpu_freq_tbl[DCVS_MAX_NUM_FREQS];
 static unsigned num_cpu_freqs;
 static struct msm_dcvs_platform_data *dcvs_pdata;
