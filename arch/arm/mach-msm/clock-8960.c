@@ -6651,9 +6651,9 @@ static void __init reg_init(void)
 		
 		Got hint from : http://forum.xda-developers.com/showthread.php?t=2307086
 		*/
-		// /* Program PLL15 to 900MHZ */
+		// /* Program PLL15 to 900MHZ */ (0x21 = 33, 900 / 33 = 27MHz)
 		// pll15_config.l = 0x21 | BVAL(31, 7, 0x620);
-		/* Program PLL15 to 1089MHZ */
+		// /* Program PLL15 to 1089MHZ */ (1089 / 27MHz = 40, 40 = 0x28)
 		pll15_config.l = 0x28 | BVAL(31, 7, 0x620);
 		// End GPU Overclock
 		
