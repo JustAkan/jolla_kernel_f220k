@@ -3518,9 +3518,13 @@ static struct clk_freq_tbl clk_tbl_gfx3d[] = {
 	F_GFX3D(200000000, pll2,  1,  4),
 	F_GFX3D(228571000, pll2,  2,  7),
 	F_GFX3D(266667000, pll2,  1,  3),
+// jollaman999
+// GPU Overclock
 	F_GFX3D(325000000, pll2,  2,  5),
 	F_GFX3D(400000000, pll2,  1,  2),
-	F_GFX3D(450000000, pll15, 1,  2),
+// jollaman999
+// GPU Overclock
+	F_GFX3D(544000000, pll15, 1,  2),
 	F_END
 };
 
@@ -3547,8 +3551,10 @@ static struct clk_freq_tbl clk_tbl_gfx3d_8960[] = {
 
 static unsigned long fmax_gfx3d_8064ab[MAX_VDD_LEVELS] __initdata = {
 	[VDD_DIG_LOW]     = 128000000,
+// jollaman999
+// GPU Overclock
 	[VDD_DIG_NOMINAL] = 325000000,
-	[VDD_DIG_HIGH]    = 450000000
+	[VDD_DIG_HIGH]    = 544000000
 };
 
 static unsigned long fmax_gfx3d_8064[MAX_VDD_LEVELS] __initdata = {
@@ -6635,8 +6641,22 @@ static void __init reg_init(void)
 		/* Program PLL15 to 975MHz with ref clk = 27MHz */
 		configure_sr_pll(&pll15_config, &pll15_regs, 0);
 	} else if (cpu_is_apq8064ab()) {
-		/* Program PLL15 to 900MHZ */
-		pll15_config.l = 0x21 | BVAL(31, 7, 0x620);
+		// jollaman999
+		// GPU Overclock
+		/* Program PLL15 to 1089MHZ */
+		/*
+		PLL15 used exclusively for GPU top frequency.
+		GPU frequency = PLL15 / 2
+		PLL15 = 27MHz * ( l(least significant bits) + m / n ) [ 27*(0x28+1/3)=1089 ]
+		
+		Got hint from : http://forum.xda-developers.com/showthread.php?t=2307086
+		*/
+		// /* Program PLL15 to 900MHZ */
+		// pll15_config.l = 0x21 | BVAL(31, 7, 0x620);
+		/* Program PLL15 to 1089MHZ */
+		pll15_config.l = 0x28 | BVAL(31, 7, 0x620);
+		// End GPU Overclock
+		
 		pll15_config.m = 0x1;
 		pll15_config.n = 0x3;
 		configure_sr_pll(&pll15_config, &pll15_regs, 0);

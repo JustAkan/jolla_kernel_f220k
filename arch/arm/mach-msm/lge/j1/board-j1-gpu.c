@@ -233,7 +233,9 @@ static struct kgsl_device_iommu_data kgsl_3d0_iommu_data[] = {
 static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 	.pwrlevel = {
  		{
-			.gpu_freq = 450000000,
+ 		// jollaman999
+ 		// GPU Overclock
+			.gpu_freq = 544000000,
 			.bus_freq = 5,
 			.io_fraction = 0,
 		},
