@@ -30,7 +30,6 @@ struct msm_thermal_data {
 	uint32_t temp_hysteresis_degC;
 	uint32_t freq_step;
 #endif
-#endif	
 };
 
 #if defined(CONFIG_THERMAL_MONITOR) || defined(CONFIG_INTELLI_THERMAL)
