@@ -3544,7 +3544,8 @@ static struct clk_freq_tbl clk_tbl_gfx3d_8960[] = {
 	F_GFX3D(228571000, pll2, 2,  7),
 	F_GFX3D(266667000, pll2, 1,  3),
 	F_GFX3D(300000000, pll3, 1,  4),
-	F_GFX3D(320000000, pll2, 2,  5),
+// GPU Overclock
+	F_GFX3D(325000000, pll2, 2,  5),
 	F_GFX3D(400000000, pll2, 1,  2),
 	F_END
 };
@@ -3559,8 +3560,9 @@ static unsigned long fmax_gfx3d_8064ab[MAX_VDD_LEVELS] __initdata = {
 
 static unsigned long fmax_gfx3d_8064[MAX_VDD_LEVELS] __initdata = {
 	[VDD_DIG_LOW]     = 128000000,
+// GPU Overclock
 	[VDD_DIG_NOMINAL] = 325000000,
-	[VDD_DIG_HIGH]    = 450000000
+	[VDD_DIG_HIGH]    = 544000000
 };
 
 static unsigned long fmax_gfx3d_8930[MAX_VDD_LEVELS] __initdata = {
@@ -3613,8 +3615,10 @@ static struct rcg_clk gfx3d_clk = {
 	.c = {
 		.dbg_name = "gfx3d_clk",
 		.ops = &clk_ops_rcg,
+// jollaman999
+// GPU Overclock
 		VDD_DIG_FMAX_MAP3(LOW,  128000000, NOMINAL, 300000000,
-				  HIGH, 400000000),
+				  HIGH, 544000000),
 		CLK_INIT(gfx3d_clk.c),
 		.depends = &gmem_axi_clk.c,
 	},
@@ -6641,8 +6645,8 @@ static void __init reg_init(void)
 		/* Program PLL15 to 975MHz with ref clk = 27MHz */
 		configure_sr_pll(&pll15_config, &pll15_regs, 0);
 	} else if (cpu_is_apq8064ab()) {
-		// jollaman999
-		// GPU Overclock
+// jollaman999
+// GPU Overclock
 		/* Program PLL15 to 1089MHZ */
 		/*
 		PLL15 used exclusively for GPU top frequency.
@@ -6702,12 +6706,14 @@ static void __init msm8960_clock_pre_init(void)
 			sizeof(msm_clocks_8960_common));
 	if (cpu_is_msm8960ab()) {
 		pll3_clk.c.rate = 650000000;
-		gfx3d_clk.c.fmax[VDD_DIG_LOW] = 192000000;
+		gfx3d_clk.c.fmax[VDD_DIG_LOW]     = 192000000;
+// jollaman999
+// GPU Overclock
 		gfx3d_clk.c.fmax[VDD_DIG_NOMINAL] = 325000000;
-		gfx3d_clk.c.fmax[VDD_DIG_HIGH] = 400000000;
+		gfx3d_clk.c.fmax[VDD_DIG_HIGH]    = 544000000;
 		mdp_clk.freq_tbl = clk_tbl_mdp_8960ab;
-		mdp_clk.c.fmax[VDD_DIG_LOW] = 128000000;
-		mdp_clk.c.fmax[VDD_DIG_NOMINAL] = 266667000;
+		mdp_clk.c.fmax[VDD_DIG_LOW]       = 128000000;
+		mdp_clk.c.fmax[VDD_DIG_NOMINAL]   = 266667000;
 
 		memcpy(msm_clocks_8960 + ARRAY_SIZE(msm_clocks_8960_common),
 			msm_clocks_8960ab_only, sizeof(msm_clocks_8960ab_only));
@@ -6772,7 +6778,9 @@ static void __init msm8960_clock_pre_init(void)
 		       sizeof(gfx3d_clk.c.fmax));
 	}
 	if (cpu_is_msm8930() || cpu_is_msm8930aa() || cpu_is_msm8627()) {
-		pll15_clk.c.rate = 900000000;
+// jollaman999
+// GPU Overclock
+		pll15_clk.c.rate = 1089000000;
 		gmem_axi_clk.c.depends = &gfx3d_axi_clk_8930.c;
 	}
 	if ((readl_relaxed(PRNG_CLK_NS_REG) & 0x7F) == 0x2B)
@@ -6883,7 +6891,9 @@ static int __init msm8960_clock_late_init(void)
 	if (WARN(IS_ERR(cfpb_a_clk), "cfpb_a_clk not found (%ld)\n",
 			PTR_ERR(cfpb_a_clk)))
 		return PTR_ERR(cfpb_a_clk);
-	rc = clk_set_rate(cfpb_a_clk, 32000000);
+// jollaman999
+// GPU Overclock
+	rc = clk_set_rate(cfpb_a_clk, 32500000);
 	if (WARN(rc, "cfpb_a_clk rate was not set (%d)\n", rc))
 		return rc;
 	rc = clk_prepare_enable(cfpb_a_clk);
