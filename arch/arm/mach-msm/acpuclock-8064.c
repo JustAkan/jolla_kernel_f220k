@@ -148,10 +148,15 @@ static struct l2_level l2_freq_tbl[] __initdata = {
 	{ }
 };
 
-// jollaman999
+// Downclock
 /*
  13500*n
- { 13500*n, HFPLL, 2, n->HEX }, L2(0), Voltage }
+ { 13500*n, HFPLL, 2, n->HEX }, L2(0-3), Voltage }
+*/
+// Overclock
+/*
+ 27000*n
+ { 27000*n, HFPLL, 1, n->HEX }, L2(9 or 18), Voltage }
 */
 static struct acpu_level tbl_slow[] __initdata = {
 	{ 1, {    81000, PLL_8, 0, 0x00 }, L2(0),   900000 },
