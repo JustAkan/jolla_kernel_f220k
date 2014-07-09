@@ -24,7 +24,7 @@
 
 // jollaman999
 // GPU Overclock
-#define KGSL_MAX_PWRLEVELS 20
+#define KGSL_MAX_PWRLEVELS 15
 
 #define KGSL_CONVERT_TO_MBPS(val) \
 	(val*1000*1000U)
