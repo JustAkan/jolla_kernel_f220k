@@ -236,7 +236,7 @@ static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 // jollaman999
 // GPU Overclock
 			.gpu_freq = 544000000,
-			.bus_freq = 5,
+			.bus_freq = 6,
 			.io_fraction = 0,
 		},
 		{
