@@ -139,7 +139,7 @@ static inline int bio_has_allocated_vec(struct bio *bio)
  * drivers should _never_ use the all version - the bio may have been split 
  * before it got to the driver and the driver won't own all of it 
  */ 
-#define bio_for_each_segment_all(bvl, bio, i)				\ 
+#define bio_for_each_segment_all(bvl, bio, i)				\
 	for (i = 0, bvl = (bio)->bi_io_vec; i < (bio)->bi_vcnt; i++, bvl++) 
  
 /* 
