@@ -18,6 +18,8 @@
 #include <linux/crc32.h>
 #include <linux/magic.h>
 
+#define F2FS_SUPER_MAGIC	0xF2F52010
+
 /*
  * For mount options
  */
