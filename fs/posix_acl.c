@@ -417,4 +417,4 @@ posix_acl_chmod(struct posix_acl **acl, gfp_t gfp, umode_t mode)
 	*acl = clone;
 	return err;
 }
-EXPORT_SYMBOL(posix_acl_chmod);
+EXPORT_SYMBOL(__posix_acl_chmod);
