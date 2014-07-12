@@ -1,0 +1,15 @@
+***************
+*** 1,6 ****
+  VERSION = 3
+  PATCHLEVEL = 4
+- SUBLEVEL = 0
+  EXTRAVERSION =
+  NAME = Saber-toothed Squirrel
+  
+--- 1,6 ----
+  VERSION = 3
+  PATCHLEVEL = 4
++ SUBLEVEL = 2
+  EXTRAVERSION =
+  NAME = Saber-toothed Squirrel
+  
