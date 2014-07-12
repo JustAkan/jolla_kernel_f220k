@@ -537,7 +537,7 @@ int f2fs_setattr(struct dentry *dentry, struct iattr *attr)
 	__setattr_copy(inode, attr);
 
 	if (attr->ia_valid & ATTR_MODE) {
-		err = f2fs_acl_chmod(inode);
+		err = posix_acl_chmod(inode, get_inode_mode(inode));
 		if (err || is_inode_flag_set(fi, FI_ACL_MODE)) {
 			inode->i_mode = fi->i_acl_mode;
 			clear_inode_flag(fi, FI_ACL_MODE);
