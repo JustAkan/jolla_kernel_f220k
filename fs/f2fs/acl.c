@@ -263,7 +263,8 @@ int f2fs_init_acl(struct inode *inode, struct inode *dir, struct page *ipage)
 	struct posix_acl *default_acl, *acl;
 	int error = 0;
 
-	error = posix_acl_create(&acl, GFP_KERNEL, mode);
+// jollaman999
+	error = posix_acl_create_f2fs(dir, &inode->i_mode, &default_acl, &acl);
 	if (error)
 		return error;
 
