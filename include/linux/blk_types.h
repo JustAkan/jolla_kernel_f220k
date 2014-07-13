@@ -40,6 +40,8 @@ struct bio {
 						 * top bits priority
 						 */
 
+	struct bvec_iter	bi_iter;
+
 	unsigned short		bi_vcnt;	/* how many bio_vec's */
 	unsigned short		bi_idx;		/* current index into bvl_vec */
 

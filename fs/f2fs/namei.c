@@ -188,8 +188,7 @@ struct dentry *f2fs_get_parent(struct dentry *child)
 	return d_obtain_alias(f2fs_iget(child->d_inode->i_sb, ino));
 }
 
-static struct dentry *f2fs_lookup(struct inode *dir, struct dentry *dentry,
-		unsigned int flags)
+static struct dentry *f2fs_lookup(struct inode *dir, struct dentry *dentry, struct nameidata *nd)
 {
 	struct inode *inode = NULL;
 	struct f2fs_dir_entry *de;
