@@ -109,7 +109,7 @@ static inline void set_cold_files(struct f2fs_sb_info *sbi, struct inode *inode,
 }
 
 static int f2fs_create(struct inode *dir, struct dentry *dentry, umode_t mode,
-						bool excl)
+						struct nameidata *nd)
 {
 	struct super_block *sb = dir->i_sb;
 	struct f2fs_sb_info *sbi = F2FS_SB(sb);
@@ -498,9 +498,9 @@ out:
 }
 
 const struct inode_operations f2fs_dir_inode_operations = {
-	.create		= f2fs_create,
+	.create   = f2fs_create,
 	.lookup		= f2fs_lookup,
-	.link		= f2fs_link,
+	.link		  = f2fs_link,
 	.unlink		= f2fs_unlink,
 	.symlink	= f2fs_symlink,
 	.mkdir		= f2fs_mkdir,
