@@ -18,6 +18,8 @@
 
 #include <trace/events/f2fs.h>
 
+#include <linux/uidgid.h>
+
 void f2fs_set_inode_flags(struct inode *inode)
 {
 	unsigned int flags = F2FS_I(inode)->i_flags;
@@ -293,5 +295,5 @@ void f2fs_evict_inode(struct inode *inode)
 
 	sb_end_intwrite(inode->i_sb);
 no_delete:
-	clear_inode(inode);
+	end_writeback(inode);
 }

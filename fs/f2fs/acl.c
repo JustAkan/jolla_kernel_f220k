@@ -17,6 +17,9 @@
 #include "xattr.h"
 #include "acl.h"
 
+#include <linux/uidgid.h>
+#include <linux/fs.h>
+
 static inline size_t f2fs_acl_size(int count)
 {
 	if (count <= 4) {
@@ -260,7 +263,7 @@ int f2fs_init_acl(struct inode *inode, struct inode *dir, struct page *ipage)
 	struct posix_acl *default_acl, *acl;
 	int error = 0;
 
-	error = posix_acl_create(dir, &inode->i_mode, &default_acl, &acl);
+	error = posix_acl_create(&acl, GFP_KERNEL, mode);
 	if (error)
 		return error;
 

@@ -25,6 +25,8 @@
 #include "f2fs.h"
 #include "xattr.h"
 
+#include <linux/fs.h>
+
 static size_t f2fs_xattr_generic_list(struct dentry *dentry, char *list,
 		size_t list_size, const char *name, size_t name_len, int type)
 {
