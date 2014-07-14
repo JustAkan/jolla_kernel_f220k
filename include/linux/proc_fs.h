@@ -112,7 +112,6 @@ struct proc_dir_entry *proc_create_data(const char *name, umode_t mode,
 				struct proc_dir_entry *parent,
 				const struct file_operations *proc_fops,
 				void *data);
-extern void *PDE_DATA(const struct inode *);
 extern void remove_proc_entry(const char *name, struct proc_dir_entry *parent);
 
 struct pid_namespace;
@@ -213,10 +212,8 @@ static inline struct proc_dir_entry *create_proc_read_entry(const char *name,
 	read_proc_t *read_proc, void * data) { return NULL; }
 
 struct tty_driver;
-
 static inline void proc_tty_register_driver(struct tty_driver *driver) {};
 static inline void proc_tty_unregister_driver(struct tty_driver *driver) {};
-static inline void *PDE_DATA(const struct inode *inode) {BUG(); return NULL;}
 
 static inline int pid_ns_prepare_proc(struct pid_namespace *ns)
 {

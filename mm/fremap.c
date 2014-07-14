@@ -80,6 +80,26 @@ out:
 	return err;
 }
 
+int generic_file_remap_pages(struct vm_area_struct *vma, unsigned long addr,
+			     unsigned long size, pgoff_t pgoff)
+{
+	struct mm_struct *mm = vma->vm_mm;
+	int err;
+
+	do {
+		err = install_file_pte(mm, vma, addr, pgoff, vma->vm_page_prot);
+		if (err)
+			return err;
+
+		size -= PAGE_SIZE;
+		addr += PAGE_SIZE;
+		pgoff++;
+	} while (size);
+
+	return 0;
+}
+EXPORT_SYMBOL(generic_file_remap_pages);
+
 static int populate_range(struct mm_struct *mm, struct vm_area_struct *vma,
 			unsigned long addr, unsigned long size, pgoff_t pgoff)
 {

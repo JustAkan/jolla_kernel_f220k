@@ -12,6 +12,8 @@
 #include <linux/slab.h>
 #include <linux/rcupdate.h>
 
+#include <linux/uidgid.h>
+
 #define ACL_UNDEFINED_ID	(-1)
 
 /* a_type field in acl_user_posix_entry_t */
@@ -37,6 +39,10 @@ struct posix_acl_entry {
 	short			e_tag;
 	unsigned short		e_perm;
 	unsigned int		e_id;
+	union {
+		kuid_t		e_uid;
+		kgid_t		e_gid;
+	};
 };
 
 struct posix_acl {
