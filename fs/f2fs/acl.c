@@ -17,9 +17,6 @@
 #include "xattr.h"
 #include "acl.h"
 
-#include <linux/uidgid.h>
-#include <linux/fs.h>
-
 static inline size_t f2fs_acl_size(int count)
 {
 	if (count <= 4) {
@@ -87,16 +84,8 @@ static struct posix_acl *f2fs_acl_from_disk(const char *value, size_t size)
 			break;
 
 		case ACL_USER:
-			acl->a_entries[i].e_uid =
-				make_kuid(&init_user_ns,
-						le32_to_cpu(entry->e_id));
-			entry = (struct f2fs_acl_entry *)((char *)entry +
-					sizeof(struct f2fs_acl_entry));
-			break;
 		case ACL_GROUP:
-			acl->a_entries[i].e_gid =
-				make_kgid(&init_user_ns,
-						le32_to_cpu(entry->e_id));
+			acl->a_entries[i].e_id = le32_to_cpu(entry->e_id);
 			entry = (struct f2fs_acl_entry *)((char *)entry +
 					sizeof(struct f2fs_acl_entry));
 			break;
@@ -133,16 +122,8 @@ static void *f2fs_acl_to_disk(const struct posix_acl *acl, size_t *size)
 
 		switch (acl->a_entries[i].e_tag) {
 		case ACL_USER:
-			entry->e_id = cpu_to_le32(
-					from_kuid(&init_user_ns,
-						acl->a_entries[i].e_uid));
-			entry = (struct f2fs_acl_entry *)((char *)entry +
-					sizeof(struct f2fs_acl_entry));
-			break;
 		case ACL_GROUP:
-			entry->e_id = cpu_to_le32(
-					from_kgid(&init_user_ns,
-						acl->a_entries[i].e_gid));
+			entry->e_id = cpu_to_le32(acl->a_entries[i].e_id);
 			entry = (struct f2fs_acl_entry *)((char *)entry +
 					sizeof(struct f2fs_acl_entry));
 			break;
@@ -281,4 +262,31 @@ int f2fs_init_acl(struct inode *inode, struct inode *dir, struct page *ipage)
 	}
 
 	return error;
+}
+
+// Sail Kernel
+int f2fs_android_emu(struct f2fs_sb_info *sbi, struct inode *inode,
+		u32 *uid, u32 *gid, umode_t *mode)
+{
+	F2FS_I(inode)->i_advise |= FADVISE_ANDROID_EMU;
+
+	if (uid)
+		*uid = sbi->android_emu_uid;
+	if (gid)
+		*gid = sbi->android_emu_gid;
+	if (mode) {
+		*mode = (*mode & ~S_IRWXUGO) | sbi->android_emu_mode;
+		if (F2FS_I(inode)->i_advise & FADVISE_ANDROID_EMU_ROOT)
+			*mode &= ~S_IRWXO;
+		if (S_ISDIR(*mode)) {
+			if (*mode & S_IRUSR)
+				*mode |= S_IXUSR;
+			if (*mode & S_IRGRP)
+				*mode |= S_IXGRP;
+			if (*mode & S_IROTH)
+				*mode |= S_IXOTH;
+		}
+	}
+
+	return 0;
 }
