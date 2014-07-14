@@ -5,6 +5,7 @@
  *
  * started by Ingo Molnar, Copyright (C) 2002, 2003
  */
+#include <linux/export.h>
 #include <linux/backing-dev.h>
 #include <linux/mm.h>
 #include <linux/swap.h>
