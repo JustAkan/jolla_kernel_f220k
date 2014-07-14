@@ -583,6 +583,15 @@ posix_acl_xattr_list(struct dentry *dentry, char *list, size_t list_size,
 	return size;
 }
 
+const struct xattr_handler posix_acl_access_xattr_handler = {
+	.prefix = POSIX_ACL_XATTR_ACCESS,
+	.flags = ACL_TYPE_ACCESS,
+	.list = posix_acl_xattr_list,
+	.get = posix_acl_xattr_get,
+	.set = posix_acl_xattr_set,
+};
+EXPORT_SYMBOL_GPL(posix_acl_access_xattr_handler);
+
 const struct xattr_handler posix_acl_default_xattr_handler = {
 	.prefix = POSIX_ACL_XATTR_DEFAULT,
 	.flags = ACL_TYPE_DEFAULT,
