@@ -22,6 +22,9 @@
 
 #include <linux/errno.h>
 
+#include <linux/posix_acl_xattr.h>
+#include <linux/xattr.h>
+
 EXPORT_SYMBOL(posix_acl_init);
 EXPORT_SYMBOL(posix_acl_alloc);
 EXPORT_SYMBOL(posix_acl_valid);
@@ -419,7 +422,33 @@ posix_acl_chmod(struct posix_acl **acl, gfp_t gfp, umode_t mode)
 }
 EXPORT_SYMBOL(posix_acl_chmod);
 
-// jollaman999
+// jollaman999 Start
+struct posix_acl *get_acl(struct inode *inode, int type)
+{
+		struct posix_acl *acl;
+
+		acl = get_cached_acl(inode, type);
+		if (acl != ACL_NOT_CACHED)
+			return acl;
+
+		if (!IS_POSIXACL(inode))
+			return NULL;
+
+		/*
+		* A filesystem can force a ACL callback by just never filling the
+		* ACL cache. But normally you'd fill the cache either at inode
+		* instantiation time, or on the first ->get_acl call.
+		*
+		* If the filesystem doesn't have a get_acl() function at all, we'll
+		* just create the negative cache entry.
+		*/
+		if (!inode->i_op->get_acl) {
+			set_cached_acl(inode, type, NULL);
+			return NULL;
+		}
+		return inode->i_op->get_acl(inode, type);
+}
+EXPORT_SYMBOL(get_acl);
 
 int
 posix_acl_chmod_f2fs(struct inode *inode, umode_t mode)
@@ -518,7 +547,7 @@ posix_acl_xattr_get(struct dentry *dentry, const char *name,
 	if (acl == NULL)
 		return -ENODATA;
 
-	error = posix_acl_to_xattr(&init_user_ns, acl, value, size);
+	error = posix_acl_to_xattr(acl, value, size);
 	posix_acl_release(acl);
 
 	return error;
@@ -543,7 +572,7 @@ posix_acl_xattr_set(struct dentry *dentry, const char *name,
 		return -EPERM;
 
 	if (value) {
-		acl = posix_acl_from_xattr(&init_user_ns, value, size);
+		acl = posix_acl_from_xattr(value, size);
 		if (IS_ERR(acl))
 			return PTR_ERR(acl);
 
@@ -600,3 +629,4 @@ const struct xattr_handler posix_acl_default_xattr_handler = {
 	.set = posix_acl_xattr_set,
 };
 EXPORT_SYMBOL_GPL(posix_acl_default_xattr_handler);
+// jollaman999 End
