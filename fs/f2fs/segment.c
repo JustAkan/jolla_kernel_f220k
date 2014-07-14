@@ -25,6 +25,7 @@
 #define __reverse_ffz(x) __reverse_ffs(~(x))
 
 static struct kmem_cache *discard_entry_slab;
+static struct kmem_cache *flush_cmd_slab;
 
 /*
  * __reverse_ffs is copied from include/asm-generic/bitops/__ffs.h since
@@ -236,12 +237,15 @@ int f2fs_issue_flush(struct f2fs_sb_info *sbi)
 {
 	struct f2fs_sm_info *sm_i = SM_I(sbi);
 	struct flush_cmd *cmd;
+	int ret;
 
 	if (!test_opt(sbi, FLUSH_MERGE))
 		return blkdev_issue_flush(sbi->sb->s_bdev, GFP_KERNEL, NULL);
 
-	init_completion(&cmd.wait);
-	cmd.next = NULL;
+	cmd = f2fs_kmem_cache_alloc(flush_cmd_slab, GFP_ATOMIC);
+	cmd->next = NULL;
+	cmd->ret = 0;
+	init_completion(&cmd->wait);
 
 	spin_lock(&sm_i->issue_lock);
 	if (sm_i->issue_list)
@@ -339,19 +343,6 @@ static void f2fs_issue_discard(struct f2fs_sb_info *sbi,
 	sector_t len = SECTOR_FROM_BLOCK(sbi, blklen);
 	blkdev_issue_discard(sbi->sb->s_bdev, start, len, GFP_NOFS, 0);
 	trace_f2fs_issue_discard(sbi->sb, blkstart, blklen);
-}
-
-void discard_next_dnode(struct f2fs_sb_info *sbi)
-{
-	struct curseg_info *curseg = CURSEG_I(sbi, CURSEG_WARM_NODE);
-	block_t blkaddr = NEXT_FREE_BLKADDR(sbi, curseg);
-
-	if (f2fs_issue_discard(sbi, blkaddr, 1)) {
-		struct page *page = grab_meta_page(sbi, blkaddr);
-		/* zero-filled page */
-		set_page_dirty(page);
-		f2fs_put_page(page, 1);
-	}
 }
 
 static void add_discard_addrs(struct f2fs_sb_info *sbi,
@@ -476,7 +467,6 @@ static void update_sit_entry(struct f2fs_sb_info *sbi, block_t blkaddr, int del)
 	struct seg_entry *se;
 	unsigned int segno, offset;
 	long int new_vblocks;
-	bool check_map = false;
 
 	segno = GET_SEGNO(sbi, blkaddr);
 
@@ -484,48 +474,21 @@ static void update_sit_entry(struct f2fs_sb_info *sbi, block_t blkaddr, int del)
 	new_vblocks = se->valid_blocks + del;
 	offset = GET_BLKOFF_FROM_SEG0(sbi, blkaddr);
 
-	if (new_vblocks < 0 || new_vblocks > sbi->blocks_per_seg ||
-	    (new_vblocks >> (sizeof(unsigned short) << 3)))
-		if (f2fs_handle_error(sbi))
-			check_map = true;
+	f2fs_bug_on((new_vblocks >> (sizeof(unsigned short) << 3) ||
+				(new_vblocks > sbi->blocks_per_seg)));
 
+	se->valid_blocks = new_vblocks;
 	se->mtime = get_mtime(sbi);
 	SIT_I(sbi)->max_mtime = se->mtime;
 
 	/* Update valid block bitmap */
 	if (del > 0) {
 		if (f2fs_set_bit(offset, se->cur_valid_map))
-			if (f2fs_handle_error(sbi))
-				check_map = true;
+			BUG();
 	} else {
 		if (!f2fs_clear_bit(offset, se->cur_valid_map))
-			if (f2fs_handle_error(sbi))
-				check_map = true;
+			BUG();
 	}
-
-	if (unlikely(check_map)) {
-		int i;
-		long int vblocks = 0;
-
-		f2fs_msg(sbi->sb, KERN_ERR,
-				"cannot %svalidate block %u in segment %u with %hu valid blocks",
-				(del < 0) ? "in" : "",
-				offset, segno, se->valid_blocks);
-
-		/* assume the count was stale to start */
-		del = 0;
-		for (i = 0; i < sbi->blocks_per_seg; i++)
-			if (f2fs_test_bit(i, se->cur_valid_map))
-				vblocks++;
-		if (vblocks != se->valid_blocks) {
-			f2fs_msg(sbi->sb, KERN_INFO, "correcting valid block "
-				"counts %d -> %ld", se->valid_blocks, vblocks);
-			/* make accounting corrections */
-			del = vblocks - se->valid_blocks;
-		}
-	}
-	se->valid_blocks += del;
-
 	if (!f2fs_test_bit(offset, se->ckpt_valid_map))
 		se->ckpt_valid_blocks += del;
 
@@ -556,12 +519,6 @@ void invalidate_blocks(struct f2fs_sb_info *sbi, block_t addr)
 	f2fs_bug_on(addr == NULL_ADDR);
 	if (addr == NEW_ADDR)
 		return;
-
-	if (segno >= TOTAL_SEGS(sbi)) {
-		f2fs_msg(sbi->sb, KERN_ERR, "invalid segment number %u", segno);
-		if (f2fs_handle_error(sbi))
-			return;
-	}
 
 	/* add it into sit main buffer */
 	mutex_lock(&sit_i->sentry_lock);
@@ -1885,6 +1842,8 @@ int build_segment_manager(struct f2fs_sb_info *sbi)
 
 	/* init sm info */
 	sbi->sm_info = sm_info;
+	INIT_LIST_HEAD(&sm_info->wblist_head);
+	spin_lock_init(&sm_info->wblist_lock);
 	sm_info->seg0_blkaddr = le32_to_cpu(raw_super->segment0_blkaddr);
 	sm_info->main_blkaddr = le32_to_cpu(raw_super->main_blkaddr);
 	sm_info->segment_count = le32_to_cpu(raw_super->segment_count);
@@ -2035,6 +1994,12 @@ int __init create_segment_manager_caches(void)
 			sizeof(struct discard_entry));
 	if (!discard_entry_slab)
 		return -ENOMEM;
+	flush_cmd_slab = f2fs_kmem_cache_create("flush_command",
+			sizeof(struct flush_cmd));
+	if (!flush_cmd_slab) {
+		kmem_cache_destroy(discard_entry_slab);
+		return -ENOMEM;
+	}
 	return 0;
 }
 
@@ -2042,9 +2007,4 @@ void destroy_segment_manager_caches(void)
 {
 	kmem_cache_destroy(discard_entry_slab);
 	kmem_cache_destroy(flush_cmd_slab);
-}
-
-void destroy_segment_manager_caches(void)
-{
-	kmem_cache_destroy(discard_entry_slab);
 }
