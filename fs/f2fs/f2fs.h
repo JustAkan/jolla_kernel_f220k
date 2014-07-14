@@ -39,6 +39,9 @@
 #define F2FS_MOUNT_POSIX_ACL		0x00000020
 #define F2FS_MOUNT_DISABLE_EXT_IDENTIFY	0x00000040
 #define F2FS_MOUNT_INLINE_XATTR		0x00000080
+#define F2FS_MOUNT_ANDROID_EMU		0x00001000
+#define F2FS_MOUNT_ERRORS_PANIC		0x00002000
+#define F2FS_MOUNT_ERRORS_RECOVER	0x00004000
 #define F2FS_MOUNT_INLINE_DATA		0x00000100
 #define F2FS_MOUNT_FLUSH_MERGE		0x00000200
 
@@ -197,6 +200,8 @@ struct extent_info {
  */
 #define FADVISE_COLD_BIT	0x01
 #define FADVISE_LOST_PINO_BIT	0x02
+#define FADVISE_ANDROID_EMU	0x10
+#define FADVISE_ANDROID_EMU_ROOT 0x20
 
 #define DEF_DIR_LEVEL		0
 
@@ -218,6 +223,7 @@ struct f2fs_inode_info {
 	nid_t i_xattr_nid;		/* node id that contains xattrs */
 	unsigned long long xattr_ver;	/* cp version of xattr modification */
 	struct extent_info ext;		/* in-memory extent cache entry */
+	struct dir_inode_entry *dirty_dir;	/* the pointer of dirty dir */
 };
 
 static inline void get_extent_info(struct extent_info *ext,
@@ -243,6 +249,7 @@ static inline void set_raw_extent(struct extent_info *ext,
 struct f2fs_nm_info {
 	block_t nat_blkaddr;		/* base disk address of NAT */
 	nid_t max_nid;			/* maximum possible node ids */
+	nid_t available_nids;		/* maximum available node ids */
 	nid_t next_scan_nid;		/* the next nid to be scanned */
 	unsigned int ram_thresh;	/* control the memory footprint */
 
@@ -252,6 +259,8 @@ struct f2fs_nm_info {
 	unsigned int nat_cnt;		/* the # of cached nat entries */
 	struct list_head nat_entries;	/* cached nat entry list (clean) */
 	struct list_head dirty_nat_entries; /* cached nat entry list (dirty) */
+	struct list_head nat_entry_set;	/* nat entry set list */
+	unsigned int dirty_nat_cnt;	/* total num of nat entries in set */
 
 	/* free node ids management */
 	struct radix_tree_root free_nid_root;/* root of the free_nid cache */
@@ -321,6 +330,15 @@ struct flush_cmd {
 	struct flush_cmd *next;
 	struct completion wait;
 	int ret;
+};
+
+struct flush_cmd_control {
+	struct task_struct *f2fs_issue_flush;	/* flush thread */
+	wait_queue_head_t flush_wait_queue;	/* waiting queue for wake-up */
+	struct flush_cmd *issue_list;		/* list for command issue */
+	struct flush_cmd *dispatch_list;	/* list for command dispatch */
+	spinlock_t issue_lock;			/* for issue list lock */
+	struct flush_cmd *issue_tail;		/* list tail of issue list */
 };
 
 struct f2fs_sm_info {
@@ -397,6 +415,12 @@ enum page_type {
 	NR_PAGE_TYPE,
 	META_FLUSH,
 };
+
+/*
+ * Android sdcard emulation flags
+ */
+#define F2FS_ANDROID_EMU_NOCASE		0x00000001
+
 
 struct f2fs_io_info {
 	enum page_type type;	/* contains DATA/NODE/META/META_FLUSH */
@@ -505,6 +529,12 @@ struct f2fs_sb_info {
 	/* For sysfs suppport */
 	struct kobject s_kobj;
 	struct completion s_kobj_unregister;
+
+	/* For Android sdcard emulation */
+	u32 android_emu_uid;
+	u32 android_emu_gid;
+	umode_t android_emu_mode;
+	int android_emu_flags;
 };
 
 /*
@@ -635,7 +665,6 @@ static inline void f2fs_unlock_all(struct f2fs_sb_info *sbi)
  */
 static inline int check_nid_range(struct f2fs_sb_info *sbi, nid_t nid)
 {
-	WARN_ON((nid >= NM_I(sbi)->max_nid));
 	if (unlikely(nid >= NM_I(sbi)->max_nid))
 		return -EINVAL;
 	return 0;
@@ -652,6 +681,15 @@ static inline int F2FS_HAS_BLOCKS(struct inode *inode)
 		return inode->i_blocks > F2FS_DEFAULT_ALLOCATED_BLOCKS + 1;
 	else
 		return inode->i_blocks > F2FS_DEFAULT_ALLOCATED_BLOCKS;
+}
+
+static inline int f2fs_handle_error(struct f2fs_sb_info *sbi)
+{
+	if (test_opt(sbi, ERRORS_PANIC))
+		BUG();
+	if (test_opt(sbi, ERRORS_RECOVER))
+		return 1;
+	return 0;
 }
 
 static inline bool f2fs_has_xattr_block(unsigned int ofs)
@@ -683,8 +721,20 @@ static inline void dec_valid_block_count(struct f2fs_sb_info *sbi,
 						blkcnt_t count)
 {
 	spin_lock(&sbi->stat_lock);
-	f2fs_bug_on(sbi->total_valid_block_count < (block_t) count);
-	f2fs_bug_on(inode->i_blocks < count);
+
+	if (sbi->total_valid_block_count < (block_t)count) {
+		pr_crit("F2FS-fs (%s): block accounting error: %u < %llu\n",
+			sbi->sb->s_id, sbi->total_valid_block_count, count);
+		f2fs_handle_error(sbi);
+		sbi->total_valid_block_count = count;
+	}
+	if (inode->i_blocks < count) {
+		pr_crit("F2FS-fs (%s): inode accounting error: %llu < %llu\n",
+			sbi->sb->s_id, inode->i_blocks, count);
+		f2fs_handle_error(sbi);
+		inode->i_blocks = count;
+	}
+
 	inode->i_blocks -= count;
 	sbi->total_valid_block_count -= (block_t)count;
 	spin_unlock(&sbi->stat_lock);
@@ -997,6 +1047,14 @@ static inline int cond_clear_inode_flag(struct f2fs_inode_info *fi, int flag)
 	}
 	return 0;
 }
+
+int f2fs_android_emu(struct f2fs_sb_info *, struct inode *, u32 *, u32 *,
+		umode_t *);
+
+#define IS_ANDROID_EMU(sbi, fi, pfi)					\
+	(test_opt((sbi), ANDROID_EMU) &&				\
+	 (((fi)->i_advise & FADVISE_ANDROID_EMU) ||			\
+	  ((pfi)->i_advise & FADVISE_ANDROID_EMU)))
 
 static inline void get_inline_info(struct f2fs_inode_info *fi,
 					struct f2fs_inode *ri)
@@ -1391,5 +1449,6 @@ bool f2fs_may_inline(struct inode *);
 int f2fs_read_inline_data(struct inode *, struct page *);
 int f2fs_convert_inline_data(struct inode *, pgoff_t);
 int f2fs_write_inline_data(struct inode *, struct page *, unsigned int);
+void truncate_inline_data(struct inode *, u64);
 int recover_inline_data(struct inode *, struct page *);
 #endif
