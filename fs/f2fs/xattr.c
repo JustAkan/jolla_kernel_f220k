@@ -25,8 +25,6 @@
 #include "f2fs.h"
 #include "xattr.h"
 
-#include <linux/fs.h>
-
 static size_t f2fs_xattr_generic_list(struct dentry *dentry, char *list,
 		size_t list_size, const char *name, size_t name_len, int type)
 {
@@ -136,7 +134,8 @@ static int f2fs_xattr_advise_get(struct dentry *dentry, const char *name,
 	if (strcmp(name, "") != 0)
 		return -EINVAL;
 
-	*((char *)buffer) = F2FS_I(inode)->i_advise;
+	if (buffer)
+		*((char *)buffer) = F2FS_I(inode)->i_advise;
 	return sizeof(char);
 }
 
@@ -157,9 +156,6 @@ static int f2fs_xattr_advise_set(struct dentry *dentry, const char *name,
 }
 
 #ifdef CONFIG_F2FS_FS_SECURITY
-static int __f2fs_setxattr(struct inode *inode, int name_index,
-			const char *name, const void *value, size_t value_len,
-			struct page *ipage);
 static int f2fs_initxattrs(struct inode *inode, const struct xattr *xattr_array,
 		void *page)
 {
@@ -479,7 +475,7 @@ cleanup:
 
 static int __f2fs_setxattr(struct inode *inode, int name_index,
 			const char *name, const void *value, size_t value_len,
-			struct page *ipage)
+			struct page *ipage, int flags)
 {
 	struct f2fs_inode_info *fi = F2FS_I(inode);
 	struct f2fs_xattr_entry *here, *last;
@@ -508,6 +504,15 @@ static int __f2fs_setxattr(struct inode *inode, int name_index,
 	here = __find_xattr(base_addr, name_index, name_len, name);
 
 	found = IS_XATTR_LAST_ENTRY(here) ? 0 : 1;
+
+	if ((flags & XATTR_REPLACE) && !found) {
+		error = -ENODATA;
+		goto exit;
+	} else if ((flags & XATTR_CREATE) && found) {
+		error = -EEXIST;
+		goto exit;
+	}
+
 	last = here;
 
 	while (!IS_XATTR_LAST_ENTRY(last))
@@ -586,7 +591,7 @@ exit:
 }
 
 int f2fs_setxattr(struct inode *inode, int name_index, const char *name,
-			const void *value, size_t value_len, struct page *ipage)
+			const void *value, size_t value_len, struct page *ipage, int flags)
 {
 	struct f2fs_sb_info *sbi = F2FS_SB(inode->i_sb);
 	int err;
@@ -596,8 +601,7 @@ int f2fs_setxattr(struct inode *inode, int name_index, const char *name,
 	f2fs_lock_op(sbi);
 	/* protect xattr_ver */
 	down_write(&F2FS_I(inode)->i_sem);
-	err = __f2fs_setxattr(inode, name_index, name, value, value_len, ipage);
-	up_write(&F2FS_I(inode)->i_sem);
+      return __f2fs_setxattr(inode, name_index, name, value, value_len, ipage, flags);
 	f2fs_unlock_op(sbi);
 
 	return err;
