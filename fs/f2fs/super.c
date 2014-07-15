@@ -663,7 +663,7 @@ static int f2fs_remount(struct super_block *sb, int *flags, char *data)
 	struct f2fs_mount_info org_mount_opt;
 	int err, active_logs;
 	bool need_restart_gc = false;
-+	bool need_stop_gc = false;
+	bool need_stop_gc = false;
 
 	/*
 	 * Save the old mount options in case we

@@ -111,9 +111,9 @@ static struct f2fs_dir_entry *find_in_block(struct page *dentry_page,
 		}
 		de = &dentry_blk->dentry[bit_pos];
 		if (nocase) {
-			if ((le16_to_cpu(de->name_len) == name->len) &&
+			if ((le16_to_cpu(de->name_len) == namelen) &&
 			    !strncasecmp(dentry_blk->filename[bit_pos],
-				name->name, name->len)) {
+				name, namelen)) {
 				*res_page = dentry_page;
 				goto found;
 			}
@@ -677,22 +677,22 @@ bool f2fs_empty_dir(struct inode *dir)
 	return true;
 }
 
-static int f2fs_readdir(struct file *file, struct dir_context *ctx)
+static int f2fs_readdir(struct file *file, void *dirent, filldir_t filldir)
 {
-	unsigned long pos = file->f_pos;
 	struct inode *inode = file->f_dentry->d_inode;
 	unsigned long npages = dir_blocks(inode);
+	unsigned char *types = f2fs_filetype_table;
 	unsigned int bit_pos = 0, start_bit_pos = 0;
 	int over = 0;
 	struct f2fs_dentry_block *dentry_blk = NULL;
 	struct f2fs_dir_entry *de = NULL;
 	struct page *dentry_page = NULL;
 	struct file_ra_state *ra = &file->f_ra;
-	unsigned int n = ((unsigned long)ctx->pos / NR_DENTRY_IN_BLOCK);
+	unsigned int n = ((unsigned long)file->f_pos / NR_DENTRY_IN_BLOCK);
 	unsigned char d_type = DT_UNKNOWN;
 	int slots;
 
-	bit_pos = ((unsigned long)ctx->pos % NR_DENTRY_IN_BLOCK);
+	bit_pos = ((unsigned long)file->f_pos % NR_DENTRY_IN_BLOCK);
 
 	/* readahead for multi pages of dir */
 	if (npages - n > 1 && !ra_has_index(ra, n))
@@ -716,7 +716,8 @@ static int f2fs_readdir(struct file *file, struct dir_context *ctx)
 
 			de = &dentry_blk->dentry[bit_pos];
 			if (de->file_type < F2FS_FT_MAX)
-				d_type = f2fs_filetype_table[de->file_type];
+				d_type = types[de->file_type];
+
 			over = filldir(dirent,
 					dentry_blk->filename[bit_pos],
 					le16_to_cpu(de->name_len),
@@ -730,7 +731,7 @@ static int f2fs_readdir(struct file *file, struct dir_context *ctx)
 			bit_pos += slots;
 		}
 		bit_pos = 0;
-		ctx->pos = (n + 1) * NR_DENTRY_IN_BLOCK;
+		file->f_pos = (n + 1) * NR_DENTRY_IN_BLOCK;
 		kunmap(dentry_page);
 		f2fs_put_page(dentry_page, 1);
 		dentry_page = NULL;
@@ -747,7 +748,7 @@ success:
 const struct file_operations f2fs_dir_operations = {
 	.llseek		= generic_file_llseek,
 	.read		= generic_read_dir,
-	.iterate	= f2fs_readdir,
+	.readdir	= f2fs_readdir,
 	.fsync		= f2fs_sync_file,
 	.unlocked_ioctl	= f2fs_ioctl,
 };

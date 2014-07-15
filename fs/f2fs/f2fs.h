@@ -185,6 +185,8 @@ enum {
 
 #define F2FS_LINK_MAX		32000	/* maximum link count per file */
 
+#define MAX_DIR_RA_PAGES	4	/* maximum ra pages of dir */
+
 /* for in-memory extent cache entry */
 #define F2FS_MIN_EXTENT_LEN	16	/* minimum extent length */
 
@@ -1008,6 +1010,7 @@ static inline int f2fs_clear_bit(unsigned int nr, char *addr)
 enum {
 	FI_NEW_INODE,		/* indicate newly allocated inode */
 	FI_DIRTY_INODE,		/* indicate inode is dirty or not */
+	FI_DIRTY_DIR,		/* indicate directory has dirty pages */
 	FI_INC_LINK,		/* need to increment i_nlink */
 	FI_ACL_MODE,		/* indicate acl mode */
 	FI_NO_ALLOC,		/* should not allocate any blocks */
@@ -1171,6 +1174,7 @@ void f2fs_set_link(struct inode *, struct f2fs_dir_entry *,
 int update_dent_inode(struct inode *, const struct qstr *);
 int __f2fs_add_link(struct inode *, const struct qstr *, struct inode *);
 void f2fs_delete_entry(struct f2fs_dir_entry *, struct page *, struct inode *);
+int f2fs_do_tmpfile(struct inode *, struct inode *);
 int f2fs_make_empty(struct inode *, struct inode *);
 bool f2fs_empty_dir(struct inode *);
 
@@ -1198,8 +1202,10 @@ f2fs_hash_t f2fs_dentry_hash(const char *, size_t);
 struct dnode_of_data;
 struct node_info;
 
+bool available_free_memory(struct f2fs_sb_info *, int);
 int is_checkpointed_node(struct f2fs_sb_info *, nid_t);
 bool fsync_mark_done(struct f2fs_sb_info *, nid_t);
+void fsync_mark_clear(struct f2fs_sb_info *, nid_t);
 void get_node_info(struct f2fs_sb_info *, nid_t, struct node_info *);
 int get_dnode_of_data(struct dnode_of_data *, pgoff_t, int);
 int truncate_inode_blocks(struct inode *, pgoff_t);
@@ -1233,10 +1239,12 @@ void destroy_node_manager_caches(void);
  */
 void f2fs_balance_fs(struct f2fs_sb_info *);
 void f2fs_balance_fs_bg(struct f2fs_sb_info *);
+int issue_flush_thread(void *);
 int f2fs_issue_flush(struct f2fs_sb_info *);
 void invalidate_blocks(struct f2fs_sb_info *, block_t);
 void refresh_sit_entry(struct f2fs_sb_info *, block_t, block_t);
 void clear_prefree_segments(struct f2fs_sb_info *);
+void discard_next_dnode(struct f2fs_sb_info *);
 int npages_for_summary_flush(struct f2fs_sb_info *);
 void allocate_new_segments(struct f2fs_sb_info *);
 struct page *get_sum_page(struct f2fs_sb_info *, unsigned int);
@@ -1300,6 +1308,7 @@ struct page *find_data_page(struct inode *, pgoff_t, bool);
 struct page *get_lock_data_page(struct inode *, pgoff_t);
 struct page *get_new_data_page(struct inode *, struct page *, pgoff_t, bool);
 int do_write_data_page(struct page *, struct f2fs_io_info *);
+int f2fs_fiemap(struct inode *inode, struct fiemap_extent_info *, u64, u64);
 
 /*
  * gc.c

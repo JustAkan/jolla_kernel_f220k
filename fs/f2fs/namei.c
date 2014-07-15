@@ -23,14 +23,13 @@
 
 static struct inode *f2fs_new_inode(struct inode *dir, umode_t mode)
 {
-	struct super_block *sb = dir->i_sb;
-	struct f2fs_sb_info *sbi = F2FS_SB(sb);
+	struct f2fs_sb_info *sbi = F2FS_SB(dir->i_sb);
 	nid_t ino;
 	struct inode *inode;
 	bool nid_free = false;
 	int err;
 
-	inode = new_inode(sb);
+	inode = new_inode(dir->i_sb);
 	if (!inode)
 		return ERR_PTR(-ENOMEM);
 
@@ -41,17 +40,17 @@ static struct inode *f2fs_new_inode(struct inode *dir, umode_t mode)
 		goto fail;
 	}
 	f2fs_unlock_op(sbi);
+
 	if (IS_ANDROID_EMU(sbi, F2FS_I(dir), F2FS_I(dir)))
 		f2fs_android_emu(sbi, inode, &inode->i_uid,
 				 &inode->i_gid, &mode);
 	else 
 		inode_init_owner(inode, dir, mode);
-	}
 
 	inode->i_ino = ino;
-	inode->i_mode = mode;
 	inode->i_blocks = 0;
 	inode->i_mtime = inode->i_atime = inode->i_ctime = CURRENT_TIME;
+	inode->i_generation = sbi->s_next_generation++;
 
 	err = insert_inode_locked(inode);
 	if (err) {
@@ -107,7 +106,7 @@ static inline void set_cold_files(struct f2fs_sb_info *sbi, struct inode *inode,
 static int f2fs_create(struct inode *dir, struct dentry *dentry, umode_t mode,
 						struct nameidata *nd)
 {
-	struct f2fs_sb_info *sbi = F2FS_SB(sb);
+	struct f2fs_sb_info *sbi = F2FS_SB(dir->i_sb);
 	struct inode *inode;
 	nid_t ino = 0;
 	int err;
@@ -150,7 +149,7 @@ static int f2fs_link(struct dentry *old_dentry, struct inode *dir,
 		struct dentry *dentry)
 {
 	struct inode *inode = old_dentry->d_inode;
-	struct f2fs_sb_info *sbi = F2FS_SB(sb);
+	struct f2fs_sb_info *sbi = F2FS_SB(dir->i_sb);
 	int err;
 
 	f2fs_balance_fs(sbi);
@@ -244,7 +243,7 @@ fail:
 static int f2fs_symlink(struct inode *dir, struct dentry *dentry,
 					const char *symname)
 {
-	struct f2fs_sb_info *sbi = F2FS_SB(sb);
+	struct f2fs_sb_info *sbi = F2FS_SB(dir->i_sb);
 	struct inode *inode;
 	size_t symlen = strlen(symname) + 1;
 	int err;
@@ -331,7 +330,7 @@ static int f2fs_rmdir(struct inode *dir, struct dentry *dentry)
 static int f2fs_mknod(struct inode *dir, struct dentry *dentry,
 				umode_t mode, dev_t rdev)
 {
-	struct f2fs_sb_info *sbi = F2FS_SB(sb);
+	struct f2fs_sb_info *sbi = F2FS_SB(dir->i_sb);
 	struct inode *inode;
 	int err = 0;
 
@@ -369,7 +368,7 @@ out:
 static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 			struct inode *new_dir, struct dentry *new_dentry)
 {
-	struct f2fs_sb_info *sbi = F2FS_SB(sb);
+	struct f2fs_sb_info *sbi = F2FS_SB(old_dir->i_sb);
 	struct inode *old_inode = old_dentry->d_inode;
 	struct inode *new_inode = new_dentry->d_inode;
 	struct page *old_dir_page;
@@ -547,6 +546,7 @@ const struct inode_operations f2fs_dir_inode_operations = {
 	.rmdir		= f2fs_rmdir,
 	.mknod		= f2fs_mknod,
 	.rename		= f2fs_rename,
+	.tmpfile	= f2fs_tmpfile,
 	.getattr	= f2fs_getattr,
 	.setattr	= f2fs_setattr,
 	.get_acl	= f2fs_get_acl,

@@ -108,7 +108,7 @@ static int f2fs_xattr_generic_set(struct dentry *dentry, const char *name,
 	if (strcmp(name, "") == 0)
 		return -EINVAL;
 
-	return f2fs_setxattr(dentry->d_inode, type, name, value, size, NULL);
+	return f2fs_setxattr(dentry->d_inode, type, name, value, size, NULL, flags);
 }
 
 static size_t f2fs_xattr_advise_list(struct dentry *dentry, char *list,
@@ -163,9 +163,9 @@ static int f2fs_initxattrs(struct inode *inode, const struct xattr *xattr_array,
 	int err = 0;
 
 	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
-		err = __f2fs_setxattr(inode, F2FS_XATTR_INDEX_SECURITY,
+		err = f2fs_setxattr(inode, F2FS_XATTR_INDEX_SECURITY,
 				xattr->name, xattr->value,
-				xattr->value_len, (struct page *)page);
+				xattr->value_len, (struct page *)page, 0);
 		if (err < 0)
 			break;
 	}
@@ -596,12 +596,17 @@ int f2fs_setxattr(struct inode *inode, int name_index, const char *name,
 	struct f2fs_sb_info *sbi = F2FS_SB(inode->i_sb);
 	int err;
 
+	/* this case is only from init_inode_metadata */
+	if (ipage)
+		return __f2fs_setxattr(inode, name_index, name, value,
+						value_len, ipage, flags);
 	f2fs_balance_fs(sbi);
 
 	f2fs_lock_op(sbi);
 	/* protect xattr_ver */
 	down_write(&F2FS_I(inode)->i_sem);
-      return __f2fs_setxattr(inode, name_index, name, value, value_len, ipage, flags);
+      return __f2fs_setxattr(inode, name_index, name, value,
+            value_len, ipage, flags);
 	f2fs_unlock_op(sbi);
 
 	return err;

@@ -196,7 +196,7 @@ void f2fs_balance_fs_bg(struct f2fs_sb_info *sbi)
 		f2fs_sync_fs(sbi->sb, true);
 }
 
-static int issue_flush_thread(void *data)
+int issue_flush_thread(void *data)
 {
 	struct f2fs_sb_info *sbi = data;
 	struct f2fs_sm_info *sm_i = SM_I(sbi);
@@ -235,7 +235,7 @@ repeat:
 int f2fs_issue_flush(struct f2fs_sb_info *sbi)
 {
 	struct f2fs_sm_info *sm_i = SM_I(sbi);
-	struct flush_cmd *cmd;
+	struct flush_cmd cmd;
 
 	if (!test_opt(sbi, FLUSH_MERGE))
 		return blkdev_issue_flush(sbi->sb->s_bdev, GFP_KERNEL, NULL);
@@ -245,19 +245,18 @@ int f2fs_issue_flush(struct f2fs_sb_info *sbi)
 
 	spin_lock(&sm_i->issue_lock);
 	if (sm_i->issue_list)
-		sm_i->issue_tail->next = cmd;
+		sm_i->issue_tail->next = &cmd;
 	else
-		sm_i->issue_list = cmd;
-	sm_i->issue_tail = cmd;
+		sm_i->issue_list = &cmd;
+	sm_i->issue_tail = &cmd;
 	spin_unlock(&sm_i->issue_lock);
 
 	if (!sm_i->dispatch_list)
 		wake_up(&sm_i->flush_wait_queue);
 
-	wait_for_completion(&cmd->wait);
-	ret = cmd->ret;
-	kmem_cache_free(flush_cmd_slab, cmd);
-	return ret;
+	wait_for_completion(&cmd.wait);
+
+	return cmd.ret;
 }
 
 static void __locate_dirty_segment(struct f2fs_sb_info *sbi, unsigned int segno,
@@ -332,13 +331,13 @@ static void locate_dirty_segment(struct f2fs_sb_info *sbi, unsigned int segno)
 	mutex_unlock(&dirty_i->seglist_lock);
 }
 
-static void f2fs_issue_discard(struct f2fs_sb_info *sbi,
+static int f2fs_issue_discard(struct f2fs_sb_info *sbi,
 				block_t blkstart, block_t blklen)
 {
 	sector_t start = SECTOR_FROM_BLOCK(sbi, blkstart);
 	sector_t len = SECTOR_FROM_BLOCK(sbi, blklen);
-	blkdev_issue_discard(sbi->sb->s_bdev, start, len, GFP_NOFS, 0);
 	trace_f2fs_issue_discard(sbi->sb, blkstart, blklen);
+	return blkdev_issue_discard(sbi->sb->s_bdev, start, len, GFP_NOFS, 0);
 }
 
 void discard_next_dnode(struct f2fs_sb_info *sbi)
@@ -2036,12 +2035,6 @@ int __init create_segment_manager_caches(void)
 	if (!discard_entry_slab)
 		return -ENOMEM;
 	return 0;
-}
-
-void destroy_segment_manager_caches(void)
-{
-	kmem_cache_destroy(discard_entry_slab);
-	kmem_cache_destroy(flush_cmd_slab);
 }
 
 void destroy_segment_manager_caches(void)

@@ -187,6 +187,8 @@ static int f2fs_write_meta_pages(struct address_space *mapping,
 	struct f2fs_sb_info *sbi = F2FS_SB(mapping->host->i_sb);
 	long diff, written;
 
+	trace_f2fs_writepages(mapping->host, wbc, META);
+
 	/* collect a number of dirty meta pages and write together */
 	if (wbc->for_kupdate ||
 		get_pages(sbi, F2FS_DIRTY_META) < nr_pages_to_skip(sbi, META))
@@ -383,7 +385,7 @@ void recover_orphan_inodes(struct f2fs_sb_info *sbi)
 		return;
 
 	sbi->por_doing = true;
-	start_blk = __start_cp_addr(sbi) + 1;
+	start_blk = __start_cp_addr(sbi) + 1 +
 	le32_to_cpu(F2FS_RAW_SUPER(sbi)->cp_payload);
 	orphan_blkaddr = __start_sum_addr(sbi) - 1;
 
@@ -596,7 +598,7 @@ if (is_inode_flag_set(F2FS_I(inode), FI_DIRTY_DIR))
 	set_inode_flag(F2FS_I(inode), FI_DIRTY_DIR);
 	F2FS_I(inode)->dirty_dir = new;
 
-	list_add_tail(&new->list, head);
+	list_add_tail(&new->list, &sbi->dir_inode_list);
 	stat_inc_dirty_dir(sbi);
 	return 0;
 }

@@ -318,6 +318,8 @@ done:
 
 void f2fs_truncate(struct inode *inode)
 {
+	int err;
+
 	if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode) ||
 				S_ISLNK(inode->i_mode)))
 		return;
@@ -378,6 +380,7 @@ static void __setattr_copy(struct inode *inode, const struct iattr *attr)
 int f2fs_setattr(struct dentry *dentry, struct iattr *attr)
 {
 	struct inode *inode = dentry->d_inode;
+	struct f2fs_inode_info *fi = F2FS_I(inode);
 	struct f2fs_inode_info *pfi = F2FS_I(dentry->d_parent->d_inode);
 	struct f2fs_sb_info *sbi = F2FS_SB(inode->i_sb);
 	int err;
