@@ -181,7 +181,8 @@ struct dentry *f2fs_get_parent(struct dentry *child)
 	return d_obtain_alias(f2fs_iget(child->d_inode->i_sb, ino));
 }
 
-static struct dentry *f2fs_lookup(struct inode *dir, struct dentry *dentry, struct nameidata *nd)
+static struct dentry *f2fs_lookup(struct inode *dir, struct dentry *dentry,
+		struct nameidata *nd)
 {
 	struct inode *inode = NULL;
 	struct f2fs_dir_entry *de;
@@ -450,7 +451,6 @@ static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 	file_lost_pino(old_inode);
 	up_write(&F2FS_I(old_inode)->i_sem);
 
-
 	old_inode->i_ctime = CURRENT_TIME;
 	mark_inode_dirty(old_inode);
 
@@ -536,11 +536,10 @@ out:
 	return err;
 }
 
-
 const struct inode_operations f2fs_dir_inode_operations = {
-	.create   = f2fs_create,
+	.create		= f2fs_create,
 	.lookup		= f2fs_lookup,
-	.link		  = f2fs_link,
+	.link		= f2fs_link,
 	.unlink		= f2fs_unlink,
 	.symlink	= f2fs_symlink,
 	.mkdir		= f2fs_mkdir,

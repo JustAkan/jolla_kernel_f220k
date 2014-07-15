@@ -599,6 +599,7 @@ static int f2fs_show_options(struct seq_file *seq, struct dentry *root)
 		seq_puts(seq, ",errors=continue");
 	if (test_opt(sbi, DISABLE_EXT_IDENTIFY))
 		seq_puts(seq, ",disable_ext_identify");
+
 	if (test_opt(sbi, ANDROID_EMU))
 		seq_printf(seq, ",android_emu=%u:%u:%ho%s",
 				sbi->android_emu_uid,
@@ -607,6 +608,7 @@ static int f2fs_show_options(struct seq_file *seq, struct dentry *root)
 				(sbi->android_emu_flags &
 					F2FS_ANDROID_EMU_NOCASE) ?
 						":nocase" : "");
+
 	if (test_opt(sbi, INLINE_DATA))
 		seq_puts(seq, ",inline_data");
 	if (!f2fs_readonly(sbi->sb) && test_opt(sbi, FLUSH_MERGE))
@@ -979,7 +981,7 @@ static int f2fs_fill_super(struct super_block *sb, void *data, int silent)
 	const char *descr = "";
 	int i;
 
-  f2fs_msg(sb, KERN_INFO, "mounting..");
+	f2fs_msg(sb, KERN_INFO, "mounting..");
 	/* allocate memory for f2fs-specific super block info */
 	sbi = kzalloc(sizeof(struct f2fs_sb_info), GFP_KERNEL);
 	if (!sbi)

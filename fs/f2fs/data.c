@@ -91,7 +91,7 @@ static struct bio *__bio_alloc(struct f2fs_sb_info *sbi, block_t blk_addr,
 	bio = bio_alloc(GFP_NOIO, npages);
 
 	bio->bi_bdev = sbi->sb->s_bdev;
-	bio->bi_iter.bi_sector = SECTOR_FROM_BLOCK(sbi, blk_addr);
+	bio->bi_sector = SECTOR_FROM_BLOCK(sbi, blk_addr);
 	bio->bi_end_io = is_read ? f2fs_read_end_io : f2fs_write_end_io;
 	bio->bi_private = sbi;
 
@@ -717,11 +717,10 @@ out:
 }
 
 static int get_data_block(struct inode *inode, sector_t iblock,
-                      struct buffer_head *bh_result, int create)
+			struct buffer_head *bh_result, int create)
 {
-      return __get_data_block(inode, iblock, bh_result, create, false);
+	return __get_data_block(inode, iblock, bh_result, create, false);
 }
-
 
 static int get_data_block_fiemap(struct inode *inode, sector_t iblock,
 			struct buffer_head *bh_result, int create)
@@ -736,11 +735,12 @@ int f2fs_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
 				start, len, get_data_block_fiemap);
 }
 
-
 static int f2fs_read_data_page(struct file *file, struct page *page)
 {
 	struct inode *inode = page->mapping->host;
 	int ret;
+
+	trace_f2fs_readpage(page, DATA);
 
 	/* If the file has inline data, try to read it directlly */
 	if (f2fs_has_inline_data(inode))
@@ -817,6 +817,8 @@ static int f2fs_write_data_page(struct page *page,
 		.rw = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : WRITE,
 	};
 
+	trace_f2fs_writepage(page, DATA);
+
 	if (page->index < end_index)
 		goto write;
 
@@ -827,7 +829,6 @@ static int f2fs_write_data_page(struct page *page,
 	offset = i_size & (PAGE_CACHE_SIZE - 1);
 	if ((page->index >= end_index + 1) || !offset)
 		goto out;
-  inode_dec_dirty_dents(inode);
 
 	zero_user_segment(page, offset, PAGE_CACHE_SIZE);
 write:
@@ -857,6 +858,7 @@ done:
 
 	clear_cold_data(page);
 out:
+	inode_dec_dirty_dents(inode);
 	unlock_page(page);
 	if (need_balance_fs)
 		f2fs_balance_fs(sbi);
@@ -1110,7 +1112,7 @@ static sector_t f2fs_bmap(struct address_space *mapping, sector_t block)
 
 	if (f2fs_has_inline_data(inode))
 		return 0;
-
+	
 	return generic_block_bmap(mapping, block, get_data_block);
 }
 

@@ -883,7 +883,7 @@ struct page *new_node_page(struct dnode_of_data *dn,
 	if (unlikely(is_inode_flag_set(F2FS_I(dn->inode), FI_NO_ALLOC)))
 		return ERR_PTR(-EPERM);
 
-	page = grab_cache_page(NODE_MAPPING(sbi),	dn->nid);
+	page = grab_cache_page(NODE_MAPPING(sbi), dn->nid);
 	if (!page)
 		return ERR_PTR(-ENOMEM);
 
@@ -901,7 +901,6 @@ struct page *new_node_page(struct dnode_of_data *dn,
 	set_node_addr(sbi, &new_ni, NEW_ADDR, false);
 
 	f2fs_wait_on_page_writeback(page, NODE);
-
 	fill_node_footer(page, dn->nid, dn->inode->i_ino, ofs, true);
 	set_cold_node(dn->inode, page);
 	SetPageUptodate(page);
@@ -981,7 +980,7 @@ struct page *get_node_page(struct f2fs_sb_info *sbi, pgoff_t nid)
 	struct page *page;
 	int err;
 repeat:
-	page = grab_cache_page(NODE_MAPPING(sbi),	nid);
+	page = grab_cache_page(NODE_MAPPING(sbi), nid);
 	if (!page)
 		return ERR_PTR(-ENOMEM);
 
@@ -1570,7 +1569,7 @@ void recover_node_page(struct f2fs_sb_info *sbi, struct page *page,
 	clear_node_page_dirty(page);
 }
 
-void recover_inline_xattr(struct inode *inode, struct page *page)
+static void recover_inline_xattr(struct inode *inode, struct page *page)
 {
 	struct f2fs_sb_info *sbi = F2FS_SB(inode->i_sb);
 	void *src_addr, *dst_addr;
@@ -1678,6 +1677,7 @@ int recover_inode_page(struct f2fs_sb_info *sbi, struct page *page)
 
 	new_ni = old_ni;
 	new_ni.ino = ino;
+
 	err = set_node_addr(sbi, &new_ni, NEW_ADDR, false);
 	if (!err)
 		if (unlikely(!inc_valid_node_count(sbi, NULL)))
@@ -1708,11 +1708,10 @@ static int ra_sum_pages(struct f2fs_sb_info *sbi, struct page **pages,
 		pages[i] = grab_cache_page(mapping, page_idx);
 		if (!pages[i])
 			break;
-    f2fs_submit_page_mbio(sbi, pages[i], page_idx, &fio);
+		f2fs_submit_page_mbio(sbi, pages[i], page_idx, &fio);
 	}
 
 	f2fs_submit_merged_bio(sbi, META, READ);
-
 	return i;
 }
 
@@ -1759,7 +1758,7 @@ skip:
 			page_cache_release(pages[idx]);
 		}
 
-	invalidate_mapping_pages(inode->i_mapping, addr,
+		invalidate_mapping_pages(inode->i_mapping, addr,
 							addr + nrpages);
 	}
 	return err;

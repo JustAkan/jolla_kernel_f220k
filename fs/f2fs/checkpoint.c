@@ -73,7 +73,7 @@ out:
 	return page;
 }
 
-inline int get_max_meta_blks(struct f2fs_sb_info *sbi, int type)
+static inline int get_max_meta_blks(struct f2fs_sb_info *sbi, int type)
 {
 	switch (type) {
 	case META_NAT:
@@ -307,7 +307,7 @@ void release_orphan_inode(struct f2fs_sb_info *sbi)
 			"unacquired orphan inode");
 		f2fs_handle_error(sbi);
 	} else
-	sbi->n_orphans--;
+		sbi->n_orphans--;
 	spin_unlock(&sbi->orphan_inode_lock);
 }
 
@@ -348,12 +348,12 @@ void remove_orphan_inode(struct f2fs_sb_info *sbi, nid_t ino)
 		if (orphan->ino == ino) {
 			list_del(&orphan->list);
 			if (sbi->n_orphans == 0) {
-						f2fs_msg(sbi->sb, KERN_ERR, "removing "
-							"unacquired orphan inode %d",
-							ino);
-						f2fs_handle_error(sbi);
-				} else
-						sbi->n_orphans--;
+				f2fs_msg(sbi->sb, KERN_ERR, "removing "
+						"unacquired orphan inode %d",
+						ino);
+				f2fs_handle_error(sbi);
+			} else
+				sbi->n_orphans--;
 			spin_unlock(&sbi->orphan_inode_lock);
 			kmem_cache_free(orphan_entry_slab, orphan);
 			return;
@@ -369,8 +369,8 @@ static void recover_orphan_inode(struct f2fs_sb_info *sbi, nid_t ino)
 		f2fs_msg(sbi->sb, KERN_ERR, "unable to recover orphan inode %d",
 				ino);
 		f2fs_handle_error(sbi);
-      return;
-  }
+		return;
+	}
 	clear_nlink(inode);
 
 	/* truncate all the data during iput */
@@ -385,8 +385,9 @@ void recover_orphan_inodes(struct f2fs_sb_info *sbi)
 		return;
 
 	sbi->por_doing = true;
+
 	start_blk = __start_cp_addr(sbi) + 1 +
-	le32_to_cpu(F2FS_RAW_SUPER(sbi)->cp_payload);
+		le32_to_cpu(F2FS_RAW_SUPER(sbi)->cp_payload);
 	orphan_blkaddr = __start_sum_addr(sbi) - 1;
 
 	ra_meta_pages(sbi, start_blk, orphan_blkaddr, META_CP);
@@ -592,12 +593,11 @@ static int __add_dirty_inode(struct inode *inode, struct dir_inode_entry *new)
 {
 	struct f2fs_sb_info *sbi = F2FS_SB(inode->i_sb);
 
-if (is_inode_flag_set(F2FS_I(inode), FI_DIRTY_DIR))
+	if (is_inode_flag_set(F2FS_I(inode), FI_DIRTY_DIR))
 		return -EEXIST;
 
 	set_inode_flag(F2FS_I(inode), FI_DIRTY_DIR);
 	F2FS_I(inode)->dirty_dir = new;
-
 	list_add_tail(&new->list, &sbi->dir_inode_list);
 	stat_inc_dirty_dir(sbi);
 	return 0;

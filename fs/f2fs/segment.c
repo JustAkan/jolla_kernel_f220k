@@ -198,6 +198,7 @@ void f2fs_balance_fs_bg(struct f2fs_sb_info *sbi)
 
 int issue_flush_thread(void *data)
 {
+#define test 0
 	struct f2fs_sb_info *sbi = data;
 	struct f2fs_sm_info *sm_i = SM_I(sbi);
 	wait_queue_head_t *q = &sm_i->flush_wait_queue;
@@ -1906,7 +1907,6 @@ int build_segment_manager(struct f2fs_sb_info *sbi)
 	if (test_opt(sbi, FLUSH_MERGE) && !f2fs_readonly(sbi->sb)) {
 		spin_lock_init(&sm_info->issue_lock);
 		init_waitqueue_head(&sm_info->flush_wait_queue);
-
 		sm_info->f2fs_issue_flush = kthread_run(issue_flush_thread, sbi,
 				"f2fs_flush-%u:%u", MAJOR(dev), MINOR(dev));
 		if (IS_ERR(sm_info->f2fs_issue_flush))
