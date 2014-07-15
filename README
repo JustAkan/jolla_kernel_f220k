@@ -1,4 +1,7 @@
-	Linux kernel release 3.x <http://kernel.org/>
+	Linux kernel release 3.4.0 with F2FS Support Moded <http://kernel.org/>
+By jollaman999
+Special Thanks to Doker-J's Sail_NEW <https://github.com/Docker-J/lge-kernel-gproj>
+Updated :	2014/07/16
 
 These are the release notes for Linux version 3.  Read them carefully,
 as they tell you what this is all about, explain how to install the
