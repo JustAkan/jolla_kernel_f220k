@@ -81,8 +81,10 @@ static int __f2fs_convert_inline_data(struct inode *inode, struct page *page)
 
 	f2fs_lock_op(sbi);
 	ipage = get_node_page(sbi, inode->i_ino);
-	if (IS_ERR(ipage))
-		return PTR_ERR(ipage);
+	if (IS_ERR(ipage)) {
+		err = PTR_ERR(ipage);
+		goto out;
+	}
 
 	/*
 	 * i_addr[0] is not used for inline data,
@@ -132,7 +134,7 @@ int f2fs_convert_inline_data(struct inode *inode, pgoff_t to_size)
 	else if (to_size <= MAX_INLINE_DATA)
 		return 0;
 
-	page = grab_cache_page_write_begin(inode->i_mapping, 0, AOP_FLAG_NOFS);
+	page = grab_cache_page(inode->i_mapping, 0);
 	if (!page)
 		return -ENOMEM;
 

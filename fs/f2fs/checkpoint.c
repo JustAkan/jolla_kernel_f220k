@@ -33,12 +33,12 @@ struct page *grab_meta_page(struct f2fs_sb_info *sbi, pgoff_t index)
 	struct address_space *mapping = META_MAPPING(sbi);
 	struct page *page = NULL;
 repeat:
-	page = grab_cache_page_write_begin(mapping, index, AOP_FLAG_NOFS);
+	page = grab_cache_page(mapping, index);
 	if (!page) {
 		cond_resched();
 		goto repeat;
 	}
-
+	f2fs_wait_on_page_writeback(page, META);
 	SetPageUptodate(page);
 	return page;
 }
@@ -157,6 +157,8 @@ static int f2fs_write_meta_page(struct page *page,
 	struct inode *inode = page->mapping->host;
 	struct f2fs_sb_info *sbi = F2FS_SB(inode->i_sb);
 
+	trace_f2fs_writepage(page, META);
+
 	if (unlikely(sbi->por_doing))
 		goto redirty_out;
 	if (wbc->for_reclaim)
@@ -174,10 +176,7 @@ no_write:
 	return 0;
 
 redirty_out:
-	dec_page_count(sbi, F2FS_DIRTY_META);
-	wbc->pages_skipped++;
-	account_page_redirty(page);
-	set_page_dirty(page);
+	redirty_page_for_writepage(wbc, page);
 	return AOP_WRITEPAGE_ACTIVATE;
 }
 
@@ -347,6 +346,7 @@ void remove_orphan_inode(struct f2fs_sb_info *sbi, nid_t ino)
 	head = &sbi->orphan_inode_list;
 	list_for_each_entry(orphan, head, list) {
 		if (orphan->ino == ino) {
+			list_del(&orphan->list);
 			if (sbi->n_orphans == 0) {
 						f2fs_msg(sbi->sb, KERN_ERR, "removing "
 							"unacquired orphan inode %d",
@@ -531,7 +531,7 @@ int get_valid_checkpoint(struct f2fs_sb_info *sbi)
 	block_t cp_blk_no;
 	int i;
 
-	sbi->ckpt = kzalloc(blk_size, GFP_KERNEL);
+	sbi->ckpt = kzalloc(cp_blks * blk_size, GFP_KERNEL);
 	if (!sbi->ckpt)
 		return -ENOMEM;
 	/*
@@ -653,7 +653,8 @@ void remove_dirty_dir_inode(struct inode *inode)
 		return;
 
 	spin_lock(&sbi->dir_inode_lock);
-	if (get_dirty_dents(inode)) {
+	if (get_dirty_dents(inode) ||
+			!is_inode_flag_set(F2FS_I(inode), FI_DIRTY_DIR)) {
 		spin_unlock(&sbi->dir_inode_lock);
 		return;
 	}
@@ -822,16 +823,19 @@ static void do_checkpoint(struct f2fs_sb_info *sbi, bool is_umount)
 
 	orphan_blocks = (sbi->n_orphans + F2FS_ORPHANS_PER_BLOCK - 1)
 					/ F2FS_ORPHANS_PER_BLOCK;
-	ckpt->cp_pack_start_sum = cpu_to_le32(1 + orphan_blocks);
+	ckpt->cp_pack_start_sum = cpu_to_le32(1 + cp_payload_blks +
+			orphan_blocks);
 
 	if (is_umount) {
 		set_ckpt_flags(ckpt, CP_UMOUNT_FLAG);
 		ckpt->cp_pack_total_block_count = cpu_to_le32(2 +
-			data_sum_blocks + orphan_blocks + NR_CURSEG_NODE_TYPE);
+				cp_payload_blks + data_sum_blocks +
+				orphan_blocks + NR_CURSEG_NODE_TYPE);
 	} else {
 		clear_ckpt_flags(ckpt, CP_UMOUNT_FLAG);
 		ckpt->cp_pack_total_block_count = cpu_to_le32(2 +
-			data_sum_blocks + orphan_blocks);
+				cp_payload_blks + data_sum_blocks +
+				orphan_blocks);
 	}
 
 	if (sbi->n_orphans)

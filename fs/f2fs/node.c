@@ -223,6 +223,7 @@ retry:
 		 * previous nat entry can be remained in nat cache.
 		 * So, reinitialize it with new information.
 		 */
+		e->ni = *ni;
 		if (ni->blk_addr != NULL_ADDR) {
 			f2fs_msg(sbi->sb, KERN_ERR, "node block address is "
 				"already set: %u", ni->blk_addr);
@@ -860,7 +861,7 @@ void remove_inode_page(struct inode *inode)
 	truncate_node(&dn);
 }
 
-struct page *new_inode_page(struct inode *inode, const struct qstr *name)
+struct page *new_inode_page(struct inode *inode)
 {
 	struct dnode_of_data dn;
 
@@ -882,8 +883,7 @@ struct page *new_node_page(struct dnode_of_data *dn,
 	if (unlikely(is_inode_flag_set(F2FS_I(dn->inode), FI_NO_ALLOC)))
 		return ERR_PTR(-EPERM);
 
-	page = grab_cache_page_write_begin(NODE_MAPPING(sbi),
-					dn->nid, AOP_FLAG_NOFS);
+	page = grab_cache_page(NODE_MAPPING(sbi),	dn->nid);
 	if (!page)
 		return ERR_PTR(-ENOMEM);
 
@@ -981,8 +981,7 @@ struct page *get_node_page(struct f2fs_sb_info *sbi, pgoff_t nid)
 	struct page *page;
 	int err;
 repeat:
-	page = grab_cache_page_write_begin(NODE_MAPPING(sbi),
-					nid, AOP_FLAG_NOFS);
+	page = grab_cache_page(NODE_MAPPING(sbi),	nid);
 	if (!page)
 		return ERR_PTR(-ENOMEM);
 
@@ -1230,6 +1229,8 @@ static int f2fs_write_node_page(struct page *page,
 		.type = NODE,
 		.rw = (wbc->sync_mode == WB_SYNC_ALL) ? WRITE_SYNC : WRITE,
 	};
+
+	trace_f2fs_writepage(page, NODE);
 
 	if (unlikely(sbi->por_doing))
 		goto redirty_out;
@@ -1487,7 +1488,7 @@ bool alloc_nid(struct f2fs_sb_info *sbi, nid_t *nid)
 	struct f2fs_nm_info *nm_i = NM_I(sbi);
 	struct free_nid *i = NULL;
 retry:
-	if (unlikely(sbi->total_valid_node_count + 1 >= nm_i->max_nid))
+	if (unlikely(sbi->total_valid_node_count + 1 > nm_i->available_nids))
 		return false;
 
 	spin_lock(&nm_i->free_nid_list_lock);
@@ -1594,6 +1595,7 @@ void recover_inline_xattr(struct inode *inode, struct page *page)
 	src_addr = inline_xattr_addr(page);
 	inline_size = inline_xattr_size(inode);
 
+	f2fs_wait_on_page_writeback(ipage, NODE);
 	memcpy(dst_addr, src_addr, inline_size);
 
 	update_inode(inode, ipage);
@@ -1688,7 +1690,7 @@ int recover_inode_page(struct f2fs_sb_info *sbi, struct page *page)
 
 /*
  * ra_sum_pages() merge contiguous pages into one bio and submit.
- * these pre-readed pages are linked in pages list.
+ * these pre-readed pages are alloced in bd_inode's mapping tree.
  */
 static int ra_sum_pages(struct f2fs_sb_info *sbi, struct page **pages,
 				int start, int nrpages)
@@ -1702,7 +1704,7 @@ static int ra_sum_pages(struct f2fs_sb_info *sbi, struct page **pages,
 	};
 
 	for (i = 0; page_idx < start + nrpages; page_idx++, i++) {
-		/* alloc temporal page for read node summary info*/
+		/* alloc page in bd_inode for reading node summary info */
 		pages[i] = grab_cache_page(mapping, page_idx);
 		if (!pages[i])
 			break;
@@ -1991,7 +1993,7 @@ static int init_node_manager(struct f2fs_sb_info *sbi)
 	nm_i->max_nid = NAT_ENTRY_PER_BLOCK * nat_blocks;
 
 	/* not used nids: 0, node, meta, (and root counted as valid node) */
-	nm_i->max_nid = NAT_ENTRY_PER_BLOCK * nat_blocks - 3;
+	nm_i->available_nids = nm_i->max_nid - 3;
 	nm_i->fcnt = 0;
 	nm_i->nat_cnt = 0;
 	nm_i->ram_thresh = DEF_RAM_THRESHOLD;

@@ -12,7 +12,6 @@
 #include <linux/f2fs_fs.h>
 #include <linux/buffer_head.h>
 #include <linux/mpage.h>
-#include <linux/aio.h>
 #include <linux/writeback.h>
 #include <linux/backing-dev.h>
 #include <linux/blkdev.h>
@@ -424,7 +423,7 @@ struct page *find_data_page(struct inode *inode, pgoff_t index, bool sync)
 	if (unlikely(dn.data_blkaddr == NEW_ADDR))
 		return ERR_PTR(-EINVAL);
 
-	page = grab_cache_page_write_begin(mapping, index, AOP_FLAG_NOFS);
+	page = grab_cache_page(mapping, index);
 	if (!page)
 		return ERR_PTR(-ENOMEM);
 
@@ -462,7 +461,7 @@ struct page *get_lock_data_page(struct inode *inode, pgoff_t index)
 	int err;
 
 repeat:
-	page = grab_cache_page_write_begin(mapping, index, AOP_FLAG_NOFS);
+	page = grab_cache_page(mapping, index);
 	if (!page)
 		return ERR_PTR(-ENOMEM);
 
@@ -615,8 +614,8 @@ static int __allocate_data_block(struct dnode_of_data *dn)
  *     b. do not use extent cache for better performance
  *     c. give the block addresses to blockdev
  */
-static int get_data_block(struct inode *inode, sector_t iblock,
-			struct buffer_head *bh_result, int create)
+static int __get_data_block(struct inode *inode, sector_t iblock,
+			struct buffer_head *bh_result, int create, bool fiemap)
 {
 	struct f2fs_sb_info *sbi = F2FS_SB(inode->i_sb);
 	unsigned int blkbits = inode->i_sb->s_blocksize_bits;
@@ -644,7 +643,7 @@ static int get_data_block(struct inode *inode, sector_t iblock,
 			err = 0;
 		goto unlock_out;
 	}
-	if (dn.data_blkaddr == NEW_ADDR)
+	if (dn.data_blkaddr == NEW_ADDR && !fiemap)
 		goto put_out;
 
 	if (dn.data_blkaddr != NULL_ADDR) {
@@ -679,7 +678,7 @@ get_next:
 				err = 0;
 			goto unlock_out;
 		}
-		if (dn.data_blkaddr == NEW_ADDR)
+		if (dn.data_blkaddr == NEW_ADDR && !fiemap)
 			goto put_out;
 
 		end_offset = IS_INODE(dn.node_page) ?
@@ -717,10 +716,17 @@ out:
 	return err;
 }
 
+static int get_data_block(struct inode *inode, sector_t iblock,
+                      struct buffer_head *bh_result, int create)
+{
+      return __get_data_block(inode, iblock, bh_result, create, false);
+}
+
+
 static int get_data_block_fiemap(struct inode *inode, sector_t iblock,
 			struct buffer_head *bh_result, int create)
 {
-	return get_data_block(inode, iblock, bh_result, create);
+	return __get_data_block(inode, iblock, bh_result, create, true);
 }
 
 int f2fs_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
@@ -819,10 +825,9 @@ static int f2fs_write_data_page(struct page *page,
 	 * this page does not have to be written to disk.
 	 */
 	offset = i_size & (PAGE_CACHE_SIZE - 1);
-	if ((page->index >= end_index + 1) || !offset) {
-		inode_dec_dirty_dents(inode);
+	if ((page->index >= end_index + 1) || !offset)
 		goto out;
-	}
+  inode_dec_dirty_dents(inode);
 
 	zero_user_segment(page, offset, PAGE_CACHE_SIZE);
 write:
@@ -952,7 +957,7 @@ repeat:
 	f2fs_unlock_op(sbi);
 
 	if (err) {
-		f2fs_put_page(page, 1);
+		f2fs_put_page(page, 0);
 		return err;
 	}
 inline_data:

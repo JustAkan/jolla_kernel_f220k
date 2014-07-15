@@ -201,6 +201,8 @@ int issue_flush_thread(void *data)
 	struct f2fs_sb_info *sbi = data;
 	struct f2fs_sm_info *sm_i = SM_I(sbi);
 	wait_queue_head_t *q = &sm_i->flush_wait_queue;
+	/*struct flush_cmd_control *fcc = SM_I(sbi)->cmd_control_info;
+	wait_queue_head_t *q = &fcc->flush_wait_queue;*/
 repeat:
 	if (kthread_should_stop())
 		return 0;
@@ -225,6 +227,7 @@ repeat:
 			next = cmd->next;
 			complete(&cmd->wait);
 		}
+		bio_put(bio);
 		sm_i->dispatch_list = NULL;
 	}
 
@@ -1700,7 +1703,7 @@ static int build_curseg(struct f2fs_sb_info *sbi)
 	struct curseg_info *array;
 	int i;
 
-	array = kzalloc(sizeof(*array) * NR_CURSEG_TYPE, GFP_KERNEL);
+	array = kcalloc(NR_CURSEG_TYPE, sizeof(*array), GFP_KERNEL);
 	if (!array)
 		return -ENOMEM;
 
@@ -1900,7 +1903,7 @@ int build_segment_manager(struct f2fs_sb_info *sbi)
 	sm_info->nr_discards = 0;
 	sm_info->max_discards = 0;
 
-	if (test_opt(sbi, FLUSH_MERGE)) {
+	if (test_opt(sbi, FLUSH_MERGE) && !f2fs_readonly(sbi->sb)) {
 		spin_lock_init(&sm_info->issue_lock);
 		init_waitqueue_head(&sm_info->flush_wait_queue);
 

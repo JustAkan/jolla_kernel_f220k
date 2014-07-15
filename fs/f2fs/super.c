@@ -567,7 +567,7 @@ static int f2fs_show_options(struct seq_file *seq, struct dentry *root)
 {
 	struct f2fs_sb_info *sbi = F2FS_SB(root->d_sb);
 
-	if (!(root->d_sb->s_flags & MS_RDONLY) && test_opt(sbi, BG_GC))
+	if (!f2fs_readonly(sbi->sb) && test_opt(sbi, BG_GC))
 		seq_printf(seq, ",background_gc=%s", "on");
 	else
 		seq_printf(seq, ",background_gc=%s", "off");
@@ -679,7 +679,7 @@ static int f2fs_remount(struct super_block *sb, int *flags, char *data)
 
 	/*
 	 * Previous and new state of filesystem is RO,
-	 * so no point in checking GC conditions.
+	 * so skip checking GC and FLUSH_MERGE conditions.
 	 */
 	if ((sb->s_flags & MS_RDONLY) && (*flags & MS_RDONLY))
 		goto skip;

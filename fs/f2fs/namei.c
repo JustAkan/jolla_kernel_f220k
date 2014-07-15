@@ -208,8 +208,7 @@ static struct dentry *f2fs_lookup(struct inode *dir, struct dentry *dentry, stru
 
 static int f2fs_unlink(struct inode *dir, struct dentry *dentry)
 {
-	struct super_block *sb = dir->i_sb;
-	struct f2fs_sb_info *sbi = F2FS_SB(sb);
+	struct f2fs_sb_info *sbi = F2FS_SB(dir->i_sb);
 	struct inode *inode = dentry->d_inode;
 	struct f2fs_dir_entry *de;
 	struct page *page;
@@ -433,9 +432,13 @@ static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 		update_inode_page(old_inode);
 		update_inode_page(new_inode);
 	} else {
+		f2fs_lock_op(sbi);
+
 		err = f2fs_add_link(new_dentry, old_inode);
-		if (err)
+		if (err) {
+			f2fs_unlock_op(sbi);
 			goto out_dir;
+		}
 
 		if (old_dir_entry) {
 			inc_nlink(new_dir);
@@ -457,9 +460,6 @@ static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 		if (old_dir != new_dir) {
 			f2fs_set_link(old_inode, old_dir_entry,
 						old_dir_page, new_dir);
-			down_write(&F2FS_I(old_inode)->i_sem);
-			F2FS_I(old_inode)->i_pino = new_dir->i_ino;
-			up_write(&F2FS_I(old_inode)->i_sem);
 			update_inode_page(old_inode);
 		} else {
 			kunmap(old_dir_page);
@@ -474,13 +474,14 @@ static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 	return 0;
 
 put_out_dir:
-	f2fs_put_page(new_page, 1);
+	f2fs_unlock_op(sbi);
+	kunmap(new_page);
+	f2fs_put_page(new_page, 0);
 out_dir:
 	if (old_dir_entry) {
 		kunmap(old_dir_page);
 		f2fs_put_page(old_dir_page, 0);
 	}
-	f2fs_unlock_op(sbi);
 out_old:
 	kunmap(old_page);
 	f2fs_put_page(old_page, 0);
