@@ -772,6 +772,12 @@ DEFINE_EVENT(f2fs__page, f2fs_writepage,
 	TP_ARGS(page, type)
 );
 
+DEFINE_EVENT(f2fs__page, f2fs_readpage,
+
+	TP_PROTO(struct page *page, int type),
+
+	TP_ARGS(page, type)
+);
 
 TRACE_EVENT(f2fs_writepages,
 
