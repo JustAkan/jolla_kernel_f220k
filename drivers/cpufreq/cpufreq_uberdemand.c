@@ -28,9 +28,11 @@
 #include <linux/input.h>
 #include <linux/workqueue.h>
 #include <linux/slab.h>
+
 // jollaman999
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
+#endif
 
 /*
  * dbs is used in this file as a shortform for demandbased switching
@@ -48,10 +50,15 @@
 #define MAX_FREQUENCY_UP_THRESHOLD		(100)
 #define MIN_FREQUENCY_DOWN_DIFFERENTIAL		(1)
 #define SECOND_PHASE_FREQ			(918000)
+// jollaman999
+#define IGNORE_NICE_LOAD 1
+#define POWERSAVE_BIAS 7
 
 // jollaman999
 #define DEFAULT_SUSPEND_IDEAL_FREQ 594000
-static unsigned int suspend_ideal_freq;
+#define DEFAULT_AWAKE_IDEAL_FREQ 1026000
+static unsigned int suspend_ideal_freq = DEFAULT_SUSPEND_IDEAL_FREQ;
+static unsigned int awake_ideal_freq = DEFAULT_AWAKE_IDEAL_FREQ;
 
 /*
  * The polling frequency of this governor depends on the capability of
@@ -105,6 +112,7 @@ struct cpu_dbs_info_s {
 	unsigned int rate_mult;
 	int cpu;
 	bool enable; // jollaman999
+	unsigned int ideal_speed; // jollaman999
 	unsigned int sample_type:1;
 	/*
 	 * percpu mutex that serializes governor limit change with
@@ -138,15 +146,19 @@ static struct dbs_tuners {
 	int          powersave_bias;
 	unsigned int io_is_busy;
 	unsigned int second_phase_freq;
-
+	
 } dbs_tuners_ins = {
 	.up_threshold = DEF_FREQUENCY_UP_THRESHOLD,
 	.sampling_down_factor = DEF_SAMPLING_DOWN_FACTOR,
 	.down_differential = DEF_FREQUENCY_DOWN_DIFFERENTIAL,
-	.ignore_nice = 0,
-	.powersave_bias = 0,
+	.ignore_nice = IGNORE_NICE_LOAD, // jollaman999
+	.powersave_bias = POWERSAVE_BIAS, // jollaman999
 	.second_phase_freq = SECOND_PHASE_FREQ,
 };
+
+// jollaman999
+static unsigned int ideal_freq;
+static bool is_suspended = false;
 
 // jollaman999
 #ifdef CONFIG_HAS_EARLYSUSPEND
@@ -317,6 +329,28 @@ static ssize_t show_powersave_bias
 (struct kobject *kobj, struct attribute *attr, char *buf)
 {
 	return snprintf(buf, PAGE_SIZE, "%d\n", dbs_tuners_ins.powersave_bias);
+}
+
+// jollaman999
+inline static void uberdemand_update_min_max(
+		struct cpu_dbs_info_s *this_smartmax, struct cpufreq_policy *policy) {
+	this_smartmax->ideal_speed = // ideal_freq; but make sure it obeys the policy min/max
+			policy->min < ideal_freq ?
+					(ideal_freq < policy->max ? ideal_freq : policy->max) :
+					policy->min;
+
+}
+
+// jollaman999
+inline static void uberdemand_update_min_max_allcpus(void) {
+	unsigned int i;
+
+	for_each_online_cpu(i)
+	{
+		struct cpu_dbs_info_s *this_uberdemand = &per_cpu(od_cpu_dbs_info, i);
+		if (this_uberdemand->enable)
+			uberdemand_update_min_max(this_uberdemand, this_uberdemand->cur_policy);
+	}
 }
 
 // jollaman999
@@ -549,8 +583,13 @@ define_one_global_rw(sampling_down_factor);
 define_one_global_rw(ignore_nice_load);
 define_one_global_rw(powersave_bias);
 define_one_global_rw(second_phase_freq);
+
 // jollaman999
-define_one_global_rw(suspend_ideal_freq);
+#define define_global_rw_attr(_name)		\
+static struct global_attr _name##_attr =	\
+	__ATTR(_name, 0644, show_##_name, store_##_name)
+// jollaman999
+define_global_rw_attr(suspend_ideal_freq);
 
 static struct attribute *dbs_attributes[] = {
 	&sampling_rate_min.attr,
@@ -754,18 +793,6 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 	}
 }
 
-// jollaman999
-inline static void uberdemand_update_min_max_allcpus(void) {
-	unsigned int i;
-
-	for_each_online_cpu(i)
-	{
-		struct cpu_dbs_info_s *this_uberdemand = &per_cpu(dbs_info, i);
-		if (this_uberdemand->enable)
-			uberdemand_update_min_max(this_uberdemand, this_uberdemand->cur_policy);
-	}
-}
-
 static void do_dbs_timer(struct work_struct *work)
 {
 	struct cpu_dbs_info_s *dbs_info =
@@ -962,7 +989,7 @@ static void uberdemand_late_resume(struct early_suspend *h)
 {
 	ideal_freq = awake_ideal_freq;
 	is_suspended = false;
-	smartmax_update_min_max_allcpus();
+	uberdemand_update_min_max_allcpus();
 }
 #endif
 
