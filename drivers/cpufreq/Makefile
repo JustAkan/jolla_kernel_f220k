@@ -13,6 +13,7 @@ obj-$(CONFIG_CPU_FREQ_GOV_ASSWAX)        += cpufreq_asswax.o
 obj-$(CONFIG_CPU_FREQ_GOV_WHEATLEY)      += cpufreq_wheatley.o
 obj-$(CONFIG_CPU_FREQ_GOV_SMARTMAX)      += cpufreq_smartmax.o
 obj-$(CONFIG_CPU_FREQ_GOV_SMARTASS2)	   += cpufreq_smartass2.o
+obj-$(CONFIG_CPU_FREQ_GOV_UBERDEMAND)  	 += cpufreq_uberdemand.o
 obj-$(CONFIG_CPU_FREQ_GOV_LAZY)          += cpufreq_lazy.o
 
 # CPUfreq cross-arch helpers
