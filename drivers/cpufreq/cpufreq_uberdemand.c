@@ -53,6 +53,7 @@
 // jollaman999
 #define IGNORE_NICE_LOAD 1
 #define POWERSAVE_BIAS 7
+#define SAMPLING_RATE 100000
 
 // jollaman999
 #define DEFAULT_SUSPEND_IDEAL_FREQ 594000
@@ -143,11 +144,12 @@ static struct dbs_tuners {
 	unsigned int down_differential;
 	unsigned int ignore_nice;
 	unsigned int sampling_down_factor;
-	int          powersave_bias;
+	int           powersave_bias;
 	unsigned int io_is_busy;
 	unsigned int second_phase_freq;
 	
 } dbs_tuners_ins = {
+	.sampling_rate = SAMPLING_RATE // jollaman999
 	.up_threshold = DEF_FREQUENCY_UP_THRESHOLD,
 	.sampling_down_factor = DEF_SAMPLING_DOWN_FACTOR,
 	.down_differential = DEF_FREQUENCY_DOWN_DIFFERENTIAL,
