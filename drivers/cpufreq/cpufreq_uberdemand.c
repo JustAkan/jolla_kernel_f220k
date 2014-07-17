@@ -28,6 +28,9 @@
 #include <linux/input.h>
 #include <linux/workqueue.h>
 #include <linux/slab.h>
+// jollaman999
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
 
 /*
  * dbs is used in this file as a shortform for demandbased switching
@@ -35,7 +38,7 @@
  */
 
 #define DEF_FREQUENCY_DOWN_DIFFERENTIAL		(10)
-#define DEF_FREQUENCY_UP_THRESHOLD		(85)
+#define DEF_FREQUENCY_UP_THRESHOLD		(90)
 #define DEF_SAMPLING_DOWN_FACTOR		(1)
 #define MAX_SAMPLING_DOWN_FACTOR		(100000)
 #define MICRO_FREQUENCY_DOWN_DIFFERENTIAL	(3)
@@ -44,7 +47,11 @@
 #define MIN_FREQUENCY_UP_THRESHOLD		(20)
 #define MAX_FREQUENCY_UP_THRESHOLD		(100)
 #define MIN_FREQUENCY_DOWN_DIFFERENTIAL		(1)
-#define SECOND_PHASE_FREQ			(1728000)
+#define SECOND_PHASE_FREQ			(918000)
+
+// jollaman999
+#define DEFAULT_SUSPEND_IDEAL_FREQ 594000
+static unsigned int suspend_ideal_freq;
 
 /*
  * The polling frequency of this governor depends on the capability of
@@ -97,6 +104,7 @@ struct cpu_dbs_info_s {
 	unsigned int freq_hi_jiffies;
 	unsigned int rate_mult;
 	int cpu;
+	bool enable; // jollaman999
 	unsigned int sample_type:1;
 	/*
 	 * percpu mutex that serializes governor limit change with
@@ -139,6 +147,11 @@ static struct dbs_tuners {
 	.powersave_bias = 0,
 	.second_phase_freq = SECOND_PHASE_FREQ,
 };
+
+// jollaman999
+#ifdef CONFIG_HAS_EARLYSUSPEND
+static struct early_suspend uberdemand_early_suspend_handler;
+#endif
 
 static inline u64 get_cpu_idle_time_jiffy(unsigned int cpu, u64 *wall)
 {
@@ -305,6 +318,29 @@ static ssize_t show_powersave_bias
 {
 	return snprintf(buf, PAGE_SIZE, "%d\n", dbs_tuners_ins.powersave_bias);
 }
+
+// jollaman999
+static ssize_t show_suspend_ideal_freq(struct kobject *kobj, struct attribute *attr,
+		char *buf) {
+	return sprintf(buf, "%u\n", suspend_ideal_freq);
+}
+// jollaman999
+static ssize_t store_suspend_ideal_freq(struct kobject *kobj, struct attribute *attr,
+		const char *buf, size_t count) {
+	ssize_t res;
+	unsigned long input;
+	res = strict_strtoul(buf, 0, &input);
+	if (res >= 0 && input >= 0) {
+		suspend_ideal_freq = input;
+		if (is_suspended){
+			ideal_freq = suspend_ideal_freq;
+			uberdemand_update_min_max_allcpus();
+		}
+	} else
+		return -EINVAL;
+	return count;
+}
+
 
 static ssize_t store_sampling_rate(struct kobject *a, struct attribute *b,
 				   const char *buf, size_t count)
@@ -513,6 +549,8 @@ define_one_global_rw(sampling_down_factor);
 define_one_global_rw(ignore_nice_load);
 define_one_global_rw(powersave_bias);
 define_one_global_rw(second_phase_freq);
+// jollaman999
+define_one_global_rw(suspend_ideal_freq);
 
 static struct attribute *dbs_attributes[] = {
 	&sampling_rate_min.attr,
@@ -524,6 +562,8 @@ static struct attribute *dbs_attributes[] = {
 	&powersave_bias.attr,
 	&second_phase_freq.attr,
 	&io_is_busy.attr,
+// jollaman999
+	&suspend_ideal_freq_attr.attr,
 	NULL
 };
 
@@ -714,6 +754,18 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 	}
 }
 
+// jollaman999
+inline static void uberdemand_update_min_max_allcpus(void) {
+	unsigned int i;
+
+	for_each_online_cpu(i)
+	{
+		struct cpu_dbs_info_s *this_uberdemand = &per_cpu(dbs_info, i);
+		if (this_uberdemand->enable)
+			uberdemand_update_min_max(this_uberdemand, this_uberdemand->cur_policy);
+	}
+}
+
 static void do_dbs_timer(struct work_struct *work)
 {
 	struct cpu_dbs_info_s *dbs_info =
@@ -897,6 +949,23 @@ static struct input_handler dbs_input_handler = {
 	.id_table	= dbs_ids,
 };
 
+// jollaman999
+#ifdef CONFIG_HAS_EARLYSUSPEND
+static void uberdemand_early_suspend(struct early_suspend *h)
+{
+	ideal_freq = suspend_ideal_freq;
+	is_suspended = true;
+	uberdemand_update_min_max_allcpus();
+}
+
+static void uberdemand_late_resume(struct early_suspend *h)
+{
+	ideal_freq = awake_ideal_freq;
+	is_suspended = false;
+	smartmax_update_min_max_allcpus();
+}
+#endif
+
 static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 				   unsigned int event)
 {
@@ -943,7 +1012,10 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 				mutex_unlock(&dbs_mutex);
 				return rc;
 			}
-
+// jollaman999
+#ifdef CONFIG_HAS_EARLYSUSPEND
+			register_early_suspend(&uberdemand_early_suspend_handler);
+#endif
 			/* policy latency is in nS. Convert it to uS first */
 			latency = policy->cpuinfo.transition_latency / 1000;
 			if (latency == 0)
@@ -981,9 +1053,13 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 		if (!cpu)
 			input_unregister_handler(&dbs_input_handler);
 		mutex_unlock(&dbs_mutex);
-		if (!dbs_enable)
-			sysfs_remove_group(cpufreq_global_kobject,
-					   &dbs_attr_group);
+// jollaman999
+		if (!dbs_enable) {
+			sysfs_remove_group(cpufreq_global_kobject, &dbs_attr_group);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+			unregister_early_suspend(&uberdemand_early_suspend_handler);
+#endif
+    }
 
 		break;
 
@@ -1011,6 +1087,8 @@ static int __init cpufreq_gov_dbs_init(void)
 	u64 idle_time;
 	unsigned int i;
 	int cpu = get_cpu();
+// jollaman999
+	suspend_ideal_freq = DEFAULT_SUSPEND_IDEAL_FREQ;
 
 	idle_time = get_cpu_idle_time_us(cpu, NULL);
 	put_cpu();
@@ -1039,6 +1117,13 @@ static int __init cpufreq_gov_dbs_init(void)
 	for_each_possible_cpu(i) {
 		INIT_WORK(&per_cpu(dbs_refresh_work, i), dbs_refresh_callback);
 	}
+
+// jollaman999
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	uberdemand_early_suspend_handler.suspend = uberdemand_early_suspend;
+	uberdemand_early_suspend_handler.resume = uberdemand_late_resume;
+	uberdemand_early_suspend_handler.level = EARLY_SUSPEND_LEVEL_DISABLE_FB + 100;
+#endif
 
 	return cpufreq_register_governor(&cpufreq_gov_uberdemand);
 }
