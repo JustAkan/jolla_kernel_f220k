@@ -149,7 +149,7 @@ static struct dbs_tuners {
 	unsigned int second_phase_freq;
 	
 } dbs_tuners_ins = {
-	.sampling_rate = SAMPLING_RATE // jollaman999
+	.sampling_rate = SAMPLING_RATE, // jollaman999
 	.up_threshold = DEF_FREQUENCY_UP_THRESHOLD,
 	.sampling_down_factor = DEF_SAMPLING_DOWN_FACTOR,
 	.down_differential = DEF_FREQUENCY_DOWN_DIFFERENTIAL,
