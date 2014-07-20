@@ -265,6 +265,8 @@ static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 		},
 	},
 	.init_level = 1,
+// jollaman999
+// GPU Overclock
 	.num_levels = 6,
 	.set_grp_async = NULL,
 	.idle_timeout = HZ/10,
