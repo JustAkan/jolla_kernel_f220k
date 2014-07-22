@@ -548,14 +548,6 @@
  * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs whether
  *      No Acknowledgement Policy should be applied.
  *
- * @NL80211_CMD_VENDOR: Vendor-specified command/event. The command is specified
- *      by the %NL80211_ATTR_VENDOR_ID attribute and a sub-command in
- *      %NL80211_ATTR_VENDOR_SUBCMD. Parameter(s) can be transported in
- *      %NL80211_ATTR_VENDOR_DATA.
- *      For feature advertisement, the %NL80211_ATTR_VENDOR_DATA attribute is
- *      used in the wiphy data as a nested attribute containing descriptions
- *      (&struct nl80211_vendor_cmd_info) of the supported vendor commands.
- *      This may also be sent as an event with the same attributes.
  * @NL80211_CMD_MAX: highest used command number
  * @__NL80211_CMD_AFTER_LAST: internal use
  */
@@ -696,8 +688,6 @@ enum nl80211_commands {
 	NL80211_CMD_UNEXPECTED_4ADDR_FRAME,
 
 	NL80211_CMD_SET_NOACK_MAP,
-	
-	NL80211_CMD_VENDOR,
 
 	/* add new commands above here */
 
@@ -762,9 +752,6 @@ enum nl80211_commands {
  * @NL80211_ATTR_IFNAME: network interface name
  * @NL80211_ATTR_IFTYPE: type of virtual interface, see &enum nl80211_iftype
  *
- * @NL80211_ATTR_WDEV: wireless device identifier, used for pseudo-devices
- *      that don't have a netdev (u64)
- * 
  * @NL80211_ATTR_MAC: MAC address (various uses)
  *
  * @NL80211_ATTR_KEY_DATA: (temporal) key data; for TKIP this consists of
@@ -1277,9 +1264,6 @@ enum nl80211_commands {
  * @NL80211_ATTR_BG_SCAN_PERIOD: Background scan period in seconds
  *      or 0 to disable background scan.
  *
- * @NL80211_ATTR_VENDOR_DATA: data for the vendor command, if any; this
- *      attribute is also used for vendor command feature advertisement
- *
  * @NL80211_ATTR_MAX: highest attribute number currently defined
  * @__NL80211_ATTR_AFTER_LAST: internal use
  */
@@ -1532,10 +1516,6 @@ enum nl80211_attrs {
 	NL80211_ATTR_BG_SCAN_PERIOD,
 
 	/* add attributes here, update the policy in nl80211.c */
-	
-	NL80211_ATTR_VENDOR_DATA,
-	
-	NL80211_ATTR_WDEV,
 
 	__NL80211_ATTR_AFTER_LAST,
 	NL80211_ATTR_MAX = __NL80211_ATTR_AFTER_LAST - 1
@@ -1974,34 +1954,6 @@ enum nl80211_reg_type {
 	NL80211_REGDOM_TYPE_WORLD,
 	NL80211_REGDOM_TYPE_CUSTOM_WORLD,
 	NL80211_REGDOM_TYPE_INTERSECTION,
-};
-
-/**
- * enum nl80211_country_ie_pref - country IE processing preferences
- *
- * enumerates the different preferences a 802.11 card can advertize
- * for parsing the country IEs. As per the current implementation
- * country IEs are only used derive the apha2, the information
- * for power settings that comes with the country IE is ignored
- * and we use the power settings from regdb.
- *
- * @NL80211_COUNTRY_IE_FOLLOW_CORE - This is the default behaviour.
- *	It allows the core to update channel flags according to the
- *	ISO3166-alpha2 in the country IE. The applied power is -
- *	MIN(power specified by custom domain, power obtained from regdb)
- * @NL80211_COUNTRY_IE_FOLLOW_POWER - for devices that have a
- *	preference that even though they may have programmed their own
- *	custom power setting prior to wiphy registration, they want
- *	to ensure their channel power settings are updated for this
- *	connection with the power settings derived from alpha2 of the
- *	country IE.
- * @NL80211_COUNTRY_IE_IGNORE_CORE - for devices that have a preference to
- *	to ignore all country IE information processed by the core.
- */
-enum nl80211_country_ie_pref {
-	NL80211_COUNTRY_IE_FOLLOW_CORE,
-	NL80211_COUNTRY_IE_FOLLOW_POWER,
-	NL80211_COUNTRY_IE_IGNORE_CORE,
 };
 
 /**
@@ -2968,19 +2920,6 @@ enum nl80211_probe_resp_offload_support_attr {
 	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 =	1<<1,
 	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P =	1<<2,
 	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U =	1<<3,
-};
-
-/**
- * struct nl80211_vendor_cmd_info - vendor command data
- * @vendor_id: If the %NL80211_VENDOR_ID_IS_LINUX flag is clear, then the
- *      value is a 24-bit OUI; if it is set then a separately allocated ID
- *      may be used, but no such IDs are allocated yet. New IDs should be
- *      added to this file when needed.
- * @subcmd: sub-command ID for the command
- */
-struct nl80211_vendor_cmd_info {
-        __u32 vendor_id;
-        __u32 subcmd;
 };
 
 #endif /* __LINUX_NL80211_H */
