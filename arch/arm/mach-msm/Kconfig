@@ -1643,6 +1643,13 @@ config CPU_VOLTAGE_TABLE
 	help
 	  Krait User Votlage Control
 
+config GPU_VOLTAGE_TABLE
+	bool "Enable GPU Voltage Table via sysfs for adjustements"
+	depends on CPU_VOLTAGE_TABLE
+	default n
+	help
+	  Adreno GPU User Voltage Control 
+
 config CPU_OVERCLOCK
 	bool "Enable CPU Overclock"
 	default n
@@ -1653,7 +1660,7 @@ config GPU_OVERCLOCK
 	bool "Enable GPU Overclock"
 	default n
 	help
-	  Enable Krait GPU Overclock
+	  Enable Adreno GPU Overclock
 
 config MSM_AVS_HW
 	bool "Enable Adaptive Voltage Scaling (AVS)"
