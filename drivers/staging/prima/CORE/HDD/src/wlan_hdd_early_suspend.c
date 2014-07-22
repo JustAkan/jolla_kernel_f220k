@@ -79,6 +79,10 @@
 #include <wlan_hdd_cfg.h>
 #include <wlan_hdd_cfg80211.h>
 #include <net/addrconf.h>
+
+// jollaman999 - Missed header..?
+#include <wlan_hdd_tdls.h>
+
 /**-----------------------------------------------------------------------------
 *   Preprocessor definitions and constants
 * ----------------------------------------------------------------------------*/
