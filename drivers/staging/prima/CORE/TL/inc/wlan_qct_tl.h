@@ -1,5 +1,25 @@
 /*
- * Copyright (c) 2012-2014 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
+ *
+ *
+ * Permission to use, copy, modify, and/or distribute this software for
+ * any purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all
+ * copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+ * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+/*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -19,14 +39,6 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/*
- * Copyright (c) 2012-2014 Qualcomm Atheros, Inc.
- * All Rights Reserved.
- * Qualcomm Atheros Confidential and Proprietary.
- *
- */
-
-
 #ifndef WLAN_QCT_WLANTL_H
 #define WLAN_QCT_WLANTL_H
 
@@ -39,6 +51,17 @@
 DESCRIPTION
   This file contains the external API exposed by the wlan transport layer
   module.
+<<<<<<< HEAD:CORE/TL/inc/wlan_qct_tl.h
+  
+      
+  Copyright (c) 2008 QUALCOMM Incorporated. All Rights Reserved.
+  Qualcomm Confidential and Proprietary
+=======
+
+
+  Copyright (c) 2008 Qualcomm Technologies, Inc. All Rights Reserved.
+  Qualcomm Technologies Confidential and Proprietary
+>>>>>>> 326d6cf... wlan: remove obsolete ANI_CHIPSET_VOLANS featurization:prima/CORE/TL/inc/wlan_qct_tl.h
 ===========================================================================*/
 
 
@@ -84,6 +107,7 @@ when        who    what, where, why
 #include "sirApi.h"
 #include "csrApi.h"
 #include "sapApi.h"
+
 /*----------------------------------------------------------------------------
  * Preprocessor Definitions and Constants
  * -------------------------------------------------------------------------*/
@@ -110,6 +134,10 @@ when        who    what, where, why
 /*Maximum number of ACs */
 #define WLANTL_MAX_AC                         4
 
+
+/* Bit Mask to represent All Stations */
+#define WLAN_ALL_STA                         0xFF
+
 /* Maximum number of station supported by TL, including BC. */
 #define WLAN_MAX_STA_COUNT  (HAL_NUM_STA)
 #define WLAN_NON32_STA_COUNT   14
@@ -133,9 +161,6 @@ when        who    what, where, why
 #define WLANTL_HO_DEFAULT_ALPHA               5
 #define WLANTL_HO_TDLS_ALPHA                  7
 
-// Choose the largest possible value that can be accomodates in 8 bit signed
-// variable.
-#define SNR_HACK_BMPS                         (127)
 /*--------------------------------------------------------------------------
   Access category enum used by TL
   - order must be kept as these values are used to setup the AC mask
@@ -270,9 +295,9 @@ typedef struct
  /*Flag to indicate if STA is a WAPI STA*/
   v_U8_t         ucIsWapiSta;
 
-#ifdef FEATURE_WLAN_ESE
- /*Flag to indicate if STA is a ESE STA*/
-  v_U8_t         ucIsEseSta;
+#ifdef FEATURE_WLAN_CCX
+ /*Flag to indicate if STA is a CCX STA*/
+  v_U8_t         ucIsCcxSta;
 #endif
 
   /*DPU Signature used for broadcast data - used for data caching*/
@@ -299,9 +324,6 @@ typedef struct
 
   /* Min Threshold for Processing Frames in TL */
   v_U8_t   uMinFramesProcThres;
-
-  /* Re-order Aging Time */
-  v_U16_t  ucReorderAgingTime[WLANTL_MAX_AC];
 }WLANTL_ConfigInfoType;
 
 /*---------------------------------------------------------------------------
@@ -407,8 +429,6 @@ typedef struct
 
   /* STA has more packets to send */
   v_BOOL_t  bMorePackets;
-  /* notifying TL if this is an ARP frame or not */
-  v_U8_t    ucIsArp;
 }WLANTL_MetaInfoType;
 
 /*---------------------------------------------------------------------------
@@ -422,10 +442,6 @@ typedef struct
   v_U16_t   ucDesSTAId;
  /*Rssi based on the received packet */
   v_S7_t    rssiAvg;
- #ifdef FEATURE_WLAN_TDLS
- /* Packet received on direct link/AP link */
-  v_U8_t    isStaTdls;
- #endif
 }WLANTL_RxMetaInfoType;
 
 
@@ -913,53 +929,6 @@ WLANTL_Close
   v_PVOID_t  pvosGCtx 
 );
 
-/*===========================================================================
-
-  FUNCTION    WLANTL_StartForwarding
-
-  DESCRIPTION
-
-    This function is used to ask serialization through TX thread of the
-    cached frame forwarding (if statation has been registered in the mean while)
-    or flushing (if station has not been registered by the time)
-
-    In case of forwarding, upper layer is only required to call WLANTL_RegisterSTAClient()
-    and doesn't need to call this function explicitly. TL will handle this inside
-    WLANTL_RegisterSTAClient().
-
-    In case of flushing, upper layer is required to call this function explicitly
-
-  DEPENDENCIES
-
-    TL must have been initialized before this gets called.
-
-
-  PARAMETERS
-
-   ucSTAId:   station id
-
-  RETURN VALUE
-
-    The result code associated with performing the operation
-    Please check return values of vos_tx_mq_serialize.
-
-  SIDE EFFECTS
-    If TL was asked to perform WLANTL_CacheSTAFrame() in WLANTL_RxFrames(),
-    either WLANTL_RegisterSTAClient() or this function must be called
-    within reasonable time. Otherwise, TL will keep cached vos buffer until
-    one of this function is called, and may end up with system buffer exhasution.
-
-    It's an upper layer's responsibility to call this function in case of
-    flushing
-
-============================================================================*/
-VOS_STATUS
-WLANTL_StartForwarding
-(
-  v_U8_t ucSTAId,
-  v_U8_t ucUcastSig,
-  v_U8_t ucBcastSig
-);
 
 /*----------------------------------------------------------------------------
     INTERACTION WITH HDD
@@ -1463,51 +1432,6 @@ WLANTL_GetRssi
 
 /*==========================================================================
 
-  FUNCTION    WLANTL_GetSnr
-
-  DESCRIPTION
-    TL will extract the SNR information from every data packet from the
-    ongoing traffic and will store it. It will provide the result to SME
-    upon request.
-
-  DEPENDENCIES
-
-    WARNING: the read and write of this value will not be protected
-             by locks, therefore the information obtained after a read
-             might not always be consistent.
-
-  PARAMETERS
-
-    IN
-    pvosGCtx:       pointer to the global vos context; a handle to TL's
-                    or SME's control block can be extracted from its context
-    ucSTAId:        station identifier for the requested value
-
-    OUT
-    puSnr:         the average value of the SNR
-
-
-  RETURN VALUE
-    The result code associated with performing the operation
-
-    VOS_STATUS_E_INVAL:  Input parameters are invalid
-    VOS_STATUS_E_FAULT:  Station ID is outside array boundaries or pointer
-                         to TL cb is NULL ; access would cause a page fault
-    VOS_STATUS_E_EXISTS: STA was not yet registered
-    VOS_STATUS_SUCCESS:  Everything is good :)
-
-  SIDE EFFECTS
-
-============================================================================*/
-VOS_STATUS
-WLANTL_GetSnr
-(
-  tANI_U8           ucSTAId,
-  tANI_S8*          pSnr
-);
-
-/*==========================================================================
-
   FUNCTION    WLANTL_GetLinkQuality
 
   DESCRIPTION 
@@ -1730,7 +1654,7 @@ WLANTL_TxMgmtFrm
   v_U8_t               tid,
   WLANTL_TxCompCBType  pfnCompTxFunc,
   v_PVOID_t            voosBDHeader,
-  v_U32_t              ucAckResponse
+  v_U8_t               ucAckResponse
 );
 
 
@@ -1980,44 +1904,6 @@ WLANTL_GetRxPktCount
 ============================================================================*/
 VOS_STATUS
 WLANTL_McProcessMsg
-(
-  v_PVOID_t        pvosGCtx,
-  vos_msg_t*       message
-);
-
-/*==========================================================================
-  FUNCTION    WLANTL_RxProcessMsg
-
-  DESCRIPTION
-    Called by VOSS when a message was serialized for TL through the
-    rx thread/task.
-
-  DEPENDENCIES
-    The TL must be initialized before this function can be called.
-
-  PARAMETERS
-
-    IN
-    pvosGCtx:       pointer to the global vos context; a handle to TL's
-                    control block can be extracted from its context
-    message:        type and content of the message
-
-
-  RETURN VALUE
-    The result code associated with performing the operation
-
-    VOS_STATUS_E_INVAL:   invalid input parameters
-    VOS_STATUS_E_FAULT:   pointer to TL cb is NULL ; access would cause a
-                          page fault
-    VOS_STATUS_SUCCESS:   Everything is good :)
-
-  Other values can be returned as a result of a function call, please check
-  corresponding API for more info.
-  SIDE EFFECTS
-
-============================================================================*/
-VOS_STATUS
-WLANTL_RxProcessMsg
 (
   v_PVOID_t        pvosGCtx,
   vos_msg_t*       message
@@ -2546,31 +2432,6 @@ VOS_STATUS WLANTL_GetSoftAPStatistics(v_PVOID_t pAdapter, WLANTL_TRANSFER_STA_TY
  }
 #endif 
 
-/*===========================================================================
-
-  FUNCTION    WLANTL_EnableCaching
-
-  DESCRIPTION
-
-    This function is used to enable caching only when assoc/reassoc req is send.
-    that is cache packets only for such STA ID.
-
-
-  DEPENDENCIES
-
-    TL must have been initialized before this gets called.
-
-
-  PARAMETERS
-
-   staId:   station id.
-
-  RETURN VALUE
-
-   none
-
-============================================================================*/
-void WLANTL_EnableCaching(v_U8_t staId);
 
  /*===========================================================================
 
@@ -2676,26 +2537,6 @@ VOS_STATUS WLANTL_Finish_ULA( void (*callbackRoutine) (void *callbackContext),
 
 void WLANTL_UpdateRssiBmps(v_PVOID_t pvosGCtx, v_U8_t staId, v_S7_t rssi);
 
-/*===============================================================================
-  FUNCTION       WLANTL_UpdateSnrBmps
-
-  DESCRIPTION    This function updates the TL's SNR (in BMPS mode)
-
-  DEPENDENCIES   None
-
-  PARAMETERS
-
-    pvosGCtx         VOS context          VOS Global context
-    staId            Station ID           Station ID
-    snr             SNR (BMPS mode)     SNR in BMPS mode
-
-  RETURN         None
-
-  SIDE EFFECTS   none
- ===============================================================================*/
-
-void WLANTL_UpdateSnrBmps(v_PVOID_t pvosGCtx, v_U8_t staId, v_S7_t snr);
-
 /*==========================================================================
   FUNCTION   WLANTL_SetTxXmitPending
 
@@ -2782,172 +2623,6 @@ v_VOID_t
 WLANTL_ClearTxXmitPending
 (
   v_PVOID_t       pvosGCtx
-);
-
-/*==========================================================================
-  FUNCTION   WLANTL_UpdateSTABssIdforIBSS
-
-  DESCRIPTION
-    HDD will call this API to update the BSSID for this Station.
-
-  DEPENDENCIES
-    The HDD Should registered the staID with TL before calling this function.
-
-  PARAMETERS
-
-    IN
-    pvosGCtx:    Pointer to the global vos context; a handle to TL's
-                    or WDA's control block can be extracted from its context
-    IN
-    ucSTAId       The Station ID for Bssid to be updated
-    IN
-    pBssid          BSSID to be updated
-
-  RETURN VALUE
-      The result code associated with performing the operation
-
-      VOS_STATUS_E_INVAL:  Input parameters are invalid
-      VOS_STATUS_E_FAULT:  Station ID is outside array boundaries or pointer to
-                           TL cb is NULL ; access would cause a page fault
-      VOS_STATUS_E_EXISTS: Station was not registered
-      VOS_STATUS_SUCCESS:  Everything is good :)
-
-  SIDE EFFECTS
-============================================================================*/
-
-VOS_STATUS
-WLANTL_UpdateSTABssIdforIBSS
-(
-  v_PVOID_t             pvosGCtx,
-  v_U8_t                ucSTAId,
-  v_U8_t               *pBssid
-);
-
-
-
-/*===============================================================================
-  FUNCTION       WLANTL_UpdateLinkCapacity
-
-  DESCRIPTION    This function updates the STA's Link Capacity in TL
-
-  DEPENDENCIES   None
-
-  PARAMETERS
-
-    pvosGCtx         VOS context          VOS Global context
-    staId            Station ID           Station ID
-    linkCapacity     linkCapacity         Link Capacity
-
-  RETURN         None
-
-  SIDE EFFECTS   none
- ===============================================================================*/
-
-void
-WLANTL_UpdateLinkCapacity
-(
-  v_PVOID_t pvosGCtx,
-  v_U8_t staId,
-  v_U32_t linkCapacity);
-
-/*===========================================================================
-
-  FUNCTION    WLANTL_GetSTALinkCapacity
-
-  DESCRIPTION
-
-    Returns Link Capacity of a particular STA.
-
-  DEPENDENCIES
-
-    A station must have been registered before its state can be retrieved.
-
-  PARAMETERS
-
-    IN
-    pvosGCtx:       pointer to the global vos context; a handle to TL's
-                    control block can be extracted from its context
-    ucSTAId:        identifier of the station
-
-    OUT
-    plinkCapacity:  the current link capacity the connection to
-                    the given station
-
-
-  RETURN VALUE
-
-    The result code associated with performing the operation
-
-    VOS_STATUS_E_INVAL:  Input parameters are invalid
-    VOS_STATUS_E_FAULT:  Station ID is outside array boundaries or pointer to
-                         TL cb is NULL ; access would cause a page fault
-    VOS_STATUS_E_EXISTS: Station was not registered
-    VOS_STATUS_SUCCESS:  Everything is good :)
-
-  SIDE EFFECTS
-
-============================================================================*/
-
-VOS_STATUS
-WLANTL_GetSTALinkCapacity
-(
-  v_PVOID_t             pvosGCtx,
-  v_U8_t                ucSTAId,
-  v_U32_t               *plinkCapacity
-);
-
-/*===========================================================================
-  FUNCTION   WLANTL_TxThreadDebugHandler
-
-  DESCRIPTION
-    Printing TL Snapshot dump, processed under TxThread context, currently
-    information regarding the global TlCb struture. Dumps information related
-    to per active STA connection currently in use by TL.
-
-  DEPENDENCIES
-    The TL must be initialized before this gets called.
-
-  PARAMETERS
-
-    IN
-    pvosGCtx:    Pointer to the global vos context; a handle to TL's
-                    or WDA's control block can be extracted from its context
-
-  RETURN VALUE   None
-
-  SIDE EFFECTS
-============================================================================*/
-
-v_VOID_t
-WLANTL_TxThreadDebugHandler
-(
-  v_PVOID_t       *pvosGCtx
-);
-
-/*==========================================================================
-  FUNCTION   WLANTL_TLDebugMessage
-
-  DESCRIPTION
-    Post a TL Snapshot request, posts message in TxThread.
-
-  DEPENDENCIES
-    The TL must be initialized before this gets called.
-
-  PARAMETERS
-
-    IN
-    displaySnapshot Boolean showing whether to dump the snapshot or not.
-
-  RETURN VALUE      None
-
-  SIDE EFFECTS
-
-============================================================================*/
-
-v_VOID_t
-WLANTL_TLDebugMessage
-(
-  v_BOOL_t displaySnapshot
 );
 
 #endif /* #ifndef WLAN_QCT_WLANTL_H */
