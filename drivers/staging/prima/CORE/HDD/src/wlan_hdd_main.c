@@ -119,13 +119,9 @@ int wlan_hdd_ftm_start(hdd_context_t *pAdapter);
 #include "qwlan_version.h"
 #include "wlan_qct_wda.h"
 #ifdef FEATURE_WLAN_TDLS
-#include <wlan_hdd_tdls.h>
+#include "wlan_hdd_tdls.h"
 #endif
 #include "wlan_hdd_debugfs.h"
-
-// jollaman999 - Missed header...?
-#include <wlan_hdd_main.h>
-#include <wlan_hdd_tdls.h>
 
 #ifdef MODULE
 #define WLAN_MODULE_NAME  module_name(THIS_MODULE)

@@ -203,6 +203,8 @@ hddTdlsPeer_t *wlan_hdd_tdls_find_peer(hdd_adapter_t *pAdapter, u8 *mac, tANI_BO
 
 hddTdlsPeer_t *wlan_hdd_tdls_find_all_peer(hdd_context_t *pHddCtx, u8 *mac);
 
+int wlan_hdd_tdls_get_link_establish_params(hdd_adapter_t *pAdapter, u8 *mac,
+                                            tCsrTdlsLinkEstablishParams* tdlsLinkEstablishParams);
 hddTdlsPeer_t *wlan_hdd_tdls_get_peer(hdd_adapter_t *pAdapter, u8 *mac);
 
 int wlan_hdd_tdls_set_cap(hdd_adapter_t *pAdapter, u8* mac, tTDLSCapType cap);

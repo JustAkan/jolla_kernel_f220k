@@ -149,8 +149,6 @@ typedef COMPILER_DEPENDENT_INT64 INT64;
 
 #if ACPI_MACHINE_WIDTH == 64
 
-typedef unsigned int u32;
-
 /*! [Begin] no source code translation (keep the typedefs as-is) */
 
 typedef unsigned int UINT32;
@@ -189,8 +187,6 @@ typedef u64 acpi_physical_address;
  ******************************************************************************/
 
 #elif ACPI_MACHINE_WIDTH == 32
-
-typedef unsigned int u32;
 
 /*! [Begin] no source code translation (keep the typedefs as-is) */
 
