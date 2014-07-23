@@ -22,6 +22,7 @@
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/module.h>
+#include <linux/persistent_ram.h>
 #include <asm/setup.h>
 #include <mach/board_lge.h>
 
@@ -356,8 +357,7 @@ static struct notifier_block panic_handler_block = {
 
 static int __init lge_panic_handler_probe(struct platform_device *pdev)
 {
-	struct resource *res = pdev->resource;
-	size_t start;
+	struct persistent_ram_zone *prz;
 	size_t buffer_size;
 	void *buffer;
 	int ret = 0;
@@ -367,28 +367,17 @@ static int __init lge_panic_handler_probe(struct platform_device *pdev)
  * taehung.kim@lge.com 2011-10-13
  */
 	void *ctx_buf;
-	size_t ctx_start;
 #endif
 #if defined(CONFIG_LGE_HIDDEN_RESET)
 	void *hreset_flag_buf;
 	size_t hreset_start;
 #endif
-	if (res == NULL || pdev->num_resources != 1 ||
-			!(res->flags & IORESOURCE_MEM)) {
-		printk(KERN_ERR "lge_panic_handler: invalid resource, %p %d flags "
-				"%lx\n", res, pdev->num_resources, res ? res->flags : 0);
-		return -ENXIO;
-	}
+	prz = persistent_ram_init_ringbuffer(&pdev->dev, false);
+	if (IS_ERR(prz))
+		return PTR_ERR(prz);
 
-	buffer_size = res->end - res->start + 1;
-	start = res->start;
-	printk(KERN_INFO "lge_panic_handler: got buffer at %zx, size %zx\n",
-			start, buffer_size);
-	buffer = ioremap(res->start, buffer_size);
-	if (buffer == NULL) {
-		printk(KERN_ERR "lge_panic_handler: failed to map memory\n");
-		return -ENOMEM;
-	}
+	buffer_size = prz->buffer_size - SZ_1K;
+	buffer = (void *)prz->buffer;;
 
 	crash_dump_log = (struct crash_log_dump *)buffer;
 	memset(crash_dump_log, 0, buffer_size);
@@ -407,12 +396,7 @@ static int __init lge_panic_handler_probe(struct platform_device *pdev)
  * save cpu and mmu registers to support simulation when debugging
  * taehung.kim@lge.com 2011-10-13
  */
-	ctx_start = res->end + 1;
-	ctx_buf = ioremap(ctx_start,1024);
-	if (ctx_buf == NULL) {
-		printk(KERN_ERR "cpu crash ctx buffer: failed to map memory\n");
-		return -ENOMEM;
-	}
+	ctx_buf = (void *)(buffer + buffer_size);
 	cpu_crash_ctx = (unsigned long *)ctx_buf;
 #endif
 #if defined(CONFIG_LGE_HIDDEN_RESET)
