@@ -1477,11 +1477,7 @@ static eHalStatus hdd_AssociationCompletionHandler( hdd_adapter_t *pAdapter, tCs
             }
             if ( !hddDisconInProgress )
             {
-                cfg80211_put_bss(
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0))
-                           pHddCtx->wiphy,
-#endif
-                             bss);
+                cfg80211_put_bss(pHddCtx->wiphy, bss);
                 // Register the Station with TL after associated...
                 vosStatus = hdd_roamRegisterSTA( pAdapter,
                     pRoamInfo,
@@ -1751,11 +1747,7 @@ static void hdd_RoamIbssIndicationHandler( hdd_adapter_t *pAdapter,
             }
 
             cfg80211_ibss_joined(pAdapter->dev, bss->bssid, GFP_KERNEL);
-            cfg80211_put_bss(
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0))
-                             pHddCtx->wiphy,
-#endif
-                             bss);
+            cfg80211_put_bss(pHddCtx->wiphy, bss);
          }
 
          break;
@@ -1908,11 +1900,7 @@ static eHalStatus roamIbssConnectHandler( hdd_adapter_t *pAdapter, tCsrRoamInfo 
              __func__, pAdapter->dev->name);
       return eHAL_STATUS_FAILURE;
    }
-   cfg80211_put_bss(
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0))
-                    WLAN_HDD_GET_CTX(pAdapter)->wiphy,
-#endif
-                    bss);
+   cfg80211_put_bss(WLAN_HDD_GET_CTX(pAdapter)->wiphy, bss);
 
    return( eHAL_STATUS_SUCCESS );
 }

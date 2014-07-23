@@ -8253,11 +8253,7 @@ static int wlan_hdd_cfg80211_update_bss( struct wiphy *wiphy,
         }
         else
         {
-            cfg80211_put_bss(
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0))
-                             wiphy,
-#endif
-                             bss_status);
+            cfg80211_put_bss(wiphy, bss_status);
         }
 
         pScanResult = sme_ScanResultGetNext(hHal, pResult);
