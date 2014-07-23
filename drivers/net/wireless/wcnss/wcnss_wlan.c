@@ -498,6 +498,18 @@ unsigned int wcnss_get_serial_number(void)
 }
 EXPORT_SYMBOL(wcnss_get_serial_number);
 
+int wcnss_wlan_iris_xo_mode(void)
+{
+	if (!penv || !penv->pdev || !penv->smd_channel_ready)
+		return -ENODEV;
+
+	if (penv->wlan_config.use_48mhz_xo)
+		return WCNSS_XO_48MHZ;
+	else
+		return WCNSS_XO_19MHZ;
+}
+EXPORT_SYMBOL(wcnss_wlan_iris_xo_mode);
+
 static int enable_wcnss_suspend_notify;
 static int enable_wcnss_suspend_notify_set(const char *val,	
 struct kernel_param *kp)

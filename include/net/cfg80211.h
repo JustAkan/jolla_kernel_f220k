@@ -399,6 +399,26 @@ struct cfg80211_beacon_data {
 	size_t probe_resp_len;
 };
 
+struct mac_address {
+	u8 addr[ETH_ALEN];
+};
+
+/**
+ * struct cfg80211_acl_data - Access control list data
+ *
+ * @acl_policy: ACL policy to be applied on the station's
+ *      entry specified by mac_addr
+ * @n_acl_entries: Number of MAC address entries passed
+ * @mac_addrs: List of MAC addresses of stations to be used for ACL
+ */
+struct cfg80211_acl_data {
+        enum nl80211_acl_policy acl_policy;
+        int n_acl_entries;
+
+        /* Keep it last */
+        struct mac_address mac_addrs[];
+};
+
 /**
  * struct cfg80211_ap_settings - AP configuration
  *
@@ -490,8 +510,12 @@ struct station_parameters {
 	u8 plink_action;
 	u8 plink_state;
 	struct ieee80211_ht_cap *ht_capa;
+	const struct ieee80211_vht_cap *vht_capa;
 	u8 uapsd_queues;
 	u8 max_sp;
+	u16 capability;
+	const u8 *ext_capab;
+	u8 ext_capab_len;
 };
 
 /**
@@ -1513,6 +1537,12 @@ struct cfg80211_gtk_rekey_data {
  *	later passes to cfg80211_probe_status().
  *
  * @set_noack_map: Set the NoAck Map for the TIDs.
+ * @set_mac_acl: Sets MAC address control list in AP and P2P GO mode.
+ *      Parameters include ACL policy, an array of MAC address of stations
+ *      and the number of MAC addresses. If there is already a list in driver
+ *      this new list replaces the existing one. Driver has to clear its ACL
+ *      when number of MAC addresses entries is passed as 0. Drivers which
+ *      advertise the support for MAC based ACL have to implement this callback.
  */
 struct cfg80211_ops {
 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
@@ -1707,6 +1737,8 @@ struct cfg80211_ops {
 	int	(*set_noack_map)(struct wiphy *wiphy,
 				  struct net_device *dev,
 				  u16 noack_map);
+	int	(*set_mac_acl)(struct wiphy *wiphy, struct net_device *dev,
+				  const struct cfg80211_acl_data *params);
 
 	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
 };
@@ -1874,10 +1906,6 @@ struct ieee80211_iface_combination {
 	u16 max_interfaces;
 	u8 n_limits;
 	bool beacon_int_infra_match;
-};
-
-struct mac_address {
-	u8 addr[ETH_ALEN];
 };
 
 struct ieee80211_txrx_stypes {
@@ -2314,6 +2342,7 @@ struct cfg80211_cached_keys;
  * @cleanup_work: work struct used for cleanup that can't be done directly
  * @beacon_interval: beacon interval used on this device for transmitting
  *	beacons, 0 when not valid
+ * @p2p_started: true if this is a P2P Device that has been started
  */
 struct wireless_dev {
 	struct wiphy *wiphy;
@@ -2330,9 +2359,9 @@ struct wireless_dev {
 
 	struct mutex mtx;
 
-	struct work_struct cleanup_work;
+	bool use_4addr, p2p_started;
 
-	bool use_4addr;
+	struct work_struct cleanup_work;
 
 	/* currently used for IBSS and SME - might be rearranged later */
 	u8 ssid[IEEE80211_MAX_SSID_LEN];
@@ -3519,6 +3548,25 @@ void cfg80211_report_obss_beacon(struct wiphy *wiphy,
 int cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
 				 struct ieee80211_channel *chan,
 				 enum nl80211_channel_type channel_type);
+
+/*
+ * cfg80211_tdls_oper_request - request userspace to perform TDLS operation
+ * @dev: the device on which the operation is requested
+ * @peer: the MAC address of the peer device
+ * @oper: the requested TDLS operation (NL80211_TDLS_SETUP or
+ *      NL80211_TDLS_TEARDOWN)
+ * @reason_code: the reason code for teardown request
+ * @gfp: allocation flags
+ *
+ * This function is used to request userspace to perform TDLS operation that
+ * requires knowledge of keys, i.e., link setup or teardown when the AP
+ * connection uses encryption. This is optional mechanism for the driver to use
+ * if it can automatically determine when a TDLS link could be useful (e.g.,
+ * based on traffic and signal strength for a peer).
+ */
+void cfg80211_tdls_oper_request(struct net_device *dev, const u8 *peer,
+				 enum nl80211_tdls_operation oper,
+				 u16 reason_code, gfp_t gfp);
 
 /*
  * cfg80211_calculate_bitrate - calculate actual bitrate (in 100Kbps units)
