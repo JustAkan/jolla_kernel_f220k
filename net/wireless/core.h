@@ -48,9 +48,7 @@ struct cfg80211_registered_device {
 
 	/* associate netdev list */
 	struct mutex devlist_mtx;
-
-	/* associated wireless interfaces, protected by rtnl or RCU */
-	struct list_head wdev_list;
+	/* protected by devlist_mtx or RCU */
 	struct list_head netdev_list;
 	int devlist_generation;
 	int opencount; /* also protected by devlist_mtx */
@@ -68,8 +66,6 @@ struct cfg80211_registered_device {
 	unsigned long suspend_at;
 	struct work_struct scan_done_wk;
 	struct work_struct sched_scan_results_wk;
-
-	struct genl_info *cur_cmd_info;
 
 	struct mutex sched_scan_mtx;
 

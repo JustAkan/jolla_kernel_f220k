@@ -1277,9 +1277,6 @@ enum nl80211_commands {
  * @NL80211_ATTR_BG_SCAN_PERIOD: Background scan period in seconds
  *      or 0 to disable background scan.
  *
- * @NL80211_ATTR_VENDOR_ID: The vendor ID, either a 24-bit OUI or, if
- *      %NL80211_VENDOR_ID_IS_LINUX is set, a special Linux ID (not used yet)
- * @NL80211_ATTR_VENDOR_SUBCMD: vendor sub-command
  * @NL80211_ATTR_VENDOR_DATA: data for the vendor command, if any; this
  *      attribute is also used for vendor command feature advertisement
  *
@@ -1535,9 +1532,7 @@ enum nl80211_attrs {
 	NL80211_ATTR_BG_SCAN_PERIOD,
 
 	/* add attributes here, update the policy in nl80211.c */
-
-	NL80211_ATTR_VENDOR_ID,
-	NL80211_ATTR_VENDOR_SUBCMD,
+	
 	NL80211_ATTR_VENDOR_DATA,
 	
 	NL80211_ATTR_WDEV,
@@ -2973,24 +2968,6 @@ enum nl80211_probe_resp_offload_support_attr {
 	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 =	1<<1,
 	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P =	1<<2,
 	NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U =	1<<3,
-};
-
-/**
- * enum nl80211_acl_policy - access control policy
- *
- * Access control policy is applied on a MAC list set by
- * %NL80211_CMD_START_AP and %NL80211_CMD_SET_MAC_ACL, to
- * be used with %NL80211_ATTR_ACL_POLICY.
- *
- * @NL80211_ACL_POLICY_ACCEPT_UNLESS_LISTED: Deny stations which are
- *      listed in ACL, i.e. allow all the stations which are not listed
- *      in ACL to authenticate.
- * @NL80211_ACL_POLICY_DENY_UNLESS_LISTED: Allow the stations which are listed
- *      in ACL, i.e. deny all the stations which are not listed in ACL.
- */
-enum nl80211_acl_policy {
-        NL80211_ACL_POLICY_ACCEPT_UNLESS_LISTED,
-        NL80211_ACL_POLICY_DENY_UNLESS_LISTED,
 };
 
 /**
