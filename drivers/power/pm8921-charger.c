@@ -61,6 +61,10 @@
 #include <linux/reboot.h>
 #endif
 
+#ifdef CONFIG_BLX
+#include <linux/blx.h>
+#endif
+
 #define ChgLog(x, ...) //printk(x, ##__VA_ARGS__)
 
 #ifdef CONFIG_LGE_PM_ADP_CHG
