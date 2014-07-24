@@ -37,6 +37,10 @@ ifeq ($(CONFIG_KERNEL_LZO),y)
 CFLAGS_decompress.o := -Os
 endif
 
+ifeq ($(CONFIG_KERNEL_LZ4),y)
+CFLAGS_decompress.o := -Os
+endif
+
 # string library code (-Os is enforced to keep it much smaller)
 OBJS		+= string.o
 CFLAGS_string.o	:= -Os
