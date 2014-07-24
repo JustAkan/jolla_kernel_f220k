@@ -2307,7 +2307,11 @@ static int get_prop_batt_status(struct pm8921_chg_chip *chip)
 #endif
 
 	if (chip->ext_psy) {
+#ifdef CONFIG_BLX
+        if (get_prop_batt_capacity(chip) >= get_charginglimit())
+#else
 		if (chip->ext_charge_done)
+#endif
 			return POWER_SUPPLY_STATUS_FULL;
 		if (chip->ext_charging)
 			return POWER_SUPPLY_STATUS_CHARGING;
@@ -5047,7 +5051,11 @@ static void eoc_worker(struct work_struct *work)
 		return;
 	}
 
+#ifdef CONFIG_BLX
+	if (end == CHG_FINISHED || get_prop_batt_capacity(chip) >= get_charginglimit()) {
+#else
 	if (end == CHG_FINISHED) {
+#endif
 		count++;
 	} else {
 		count = 0;
@@ -5080,13 +5088,20 @@ static void eoc_worker(struct work_struct *work)
 #endif
 		pm_chg_auto_enable(chip, 0);
 
+#ifdef CONFIG_BLX
+		if (is_ext_charging(chip) || get_prop_batt_capacity(chip) >= get_charginglimit())
+#else
 		if (is_ext_charging(chip))
+#endif
 			chip->ext_charge_done = true;
+//#ifdef CONFIG_BLX
 
+//#else
 		if (chip->is_bat_warm || chip->is_bat_cool)
 			chip->bms_notify.is_battery_full = 0;
 		else
 			chip->bms_notify.is_battery_full = 1;
+//#endif
 		/* declare end of charging by invoking chgdone interrupt */
 		chgdone_irq_handler(chip->pmic_chg_irq[CHGDONE_IRQ], chip);
 #ifdef CONFIG_LGE_PM
