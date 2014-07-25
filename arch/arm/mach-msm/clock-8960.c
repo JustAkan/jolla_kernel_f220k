@@ -3524,7 +3524,11 @@ static struct clk_freq_tbl clk_tbl_gfx3d[] = {
 	F_GFX3D(400000000, pll2,  1,  2),
 // jollaman999
 // GPU Overclock
+#ifdef CONFIG_GPU_OVERCLOCK
 	F_GFX3D(544000000, pll15, 1,  2),
+#else
+	F_GFX3D(450000000, pll15, 1,  2),
+#endif /* CONFIG_GPU_OVERCLOCK */
 	F_END
 };
 
@@ -3555,14 +3559,22 @@ static unsigned long fmax_gfx3d_8064ab[MAX_VDD_LEVELS] __initdata = {
 // jollaman999
 // GPU Overclock
 	[VDD_DIG_NOMINAL] = 325000000,
+#ifdef CONFIG_GPU_OVERCLOCK
 	[VDD_DIG_HIGH]    = 544000000
+#else
+	[VDD_DIG_HIGH]    = 450000000
+#endif /* CONFIG_GPU_OVERCLOCK */
 };
 
 static unsigned long fmax_gfx3d_8064[MAX_VDD_LEVELS] __initdata = {
 	[VDD_DIG_LOW]     = 128000000,
 // GPU Overclock
 	[VDD_DIG_NOMINAL] = 325000000,
+#ifdef CONFIG_GPU_OVERCLOCK
 	[VDD_DIG_HIGH]    = 544000000
+#else
+	[VDD_DIG_HIGH]    = 450000000
+#endif /* CONFIG_GPU_OVERCLOCK */
 };
 
 static unsigned long fmax_gfx3d_8930[MAX_VDD_LEVELS] __initdata = {
@@ -3617,8 +3629,13 @@ static struct rcg_clk gfx3d_clk = {
 		.ops = &clk_ops_rcg,
 // jollaman999
 // GPU Overclock
+#ifdef CONFIG_GPU_OVERCLOCK
 		VDD_DIG_FMAX_MAP3(LOW,  128000000, NOMINAL, 325000000,
 				  HIGH, 544000000),
+#else
+		VDD_DIG_FMAX_MAP3(LOW,  128000000, NOMINAL, 325000000,
+				  HIGH, 450000000),
+#endif /* CONFIG_GPU_OVERCLOCK */
 		CLK_INIT(gfx3d_clk.c),
 		.depends = &gmem_axi_clk.c,
 	},
@@ -6655,10 +6672,13 @@ static void __init reg_init(void)
 		
 		Got hint from : http://forum.xda-developers.com/showthread.php?t=2307086
 		*/
-		// /* Program PLL15 to 900MHZ */ (0x21 = 33, 900 / 33 = 27MHz)
-		// pll15_config.l = 0x21 | BVAL(31, 7, 0x620);
+#ifdef CONFIG_GPU_OVERCLOCK
 		// /* Program PLL15 to 1089MHZ */ (1089 / 27MHz = 40, 40 = 0x28)
 		pll15_config.l = 0x28 | BVAL(31, 7, 0x620);
+#else
+		// /* Program PLL15 to 900MHZ */ (0x21 = 33, 900 / 33 = 27MHz)
+		pll15_config.l = 0x21 | BVAL(31, 7, 0x620);
+#endif /* CONFIG_GPU_OVERCLOCK */
 		// End GPU Overclock
 		
 		pll15_config.m = 0x1;
@@ -6710,7 +6730,11 @@ static void __init msm8960_clock_pre_init(void)
 // jollaman999
 // GPU Overclock
 		gfx3d_clk.c.fmax[VDD_DIG_NOMINAL] = 325000000;
+#ifdef CONFIG_GPU_OVERCLOCK
 		gfx3d_clk.c.fmax[VDD_DIG_HIGH]    = 544000000;
+#else
+		gfx3d_clk.c.fmax[VDD_DIG_HIGH]    = 450000000;
+#endif /* CONFIG_GPU_OVERCLOCK */
 		mdp_clk.freq_tbl = clk_tbl_mdp_8960ab;
 		mdp_clk.c.fmax[VDD_DIG_LOW]       = 128000000;
 		mdp_clk.c.fmax[VDD_DIG_NOMINAL]   = 266667000;
@@ -6780,7 +6804,11 @@ static void __init msm8960_clock_pre_init(void)
 	if (cpu_is_msm8930() || cpu_is_msm8930aa() || cpu_is_msm8627()) {
 // jollaman999
 // GPU Overclock
+#ifdef CONFIG_GPU_OVERCLOCK
 		pll15_clk.c.rate = 1089000000;
+#else
+		pll15_clk.c.rate = 900000000;
+#endif /* CONFIG_GPU_OVERCLOCK */
 		gmem_axi_clk.c.depends = &gfx3d_axi_clk_8930.c;
 	}
 	if ((readl_relaxed(PRNG_CLK_NS_REG) & 0x7F) == 0x2B)
