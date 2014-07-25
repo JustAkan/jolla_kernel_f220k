@@ -582,7 +582,13 @@ static struct pll_clk pll15_clk = {
 	.parent = &pxo_clk.c,
 	.c = {
 		.dbg_name = "pll15_clk",
+// jollaman999
+// GPU Overclock
+#ifdef CONFIG_GPU_OVERCLOCK
+		.rate = 1215000000,
+#else
 		.rate = 975000000,
+#endif /* CONFIG_GPU_OVERCLOCK */
 		.ops = &clk_ops_local_pll,
 		CLK_INIT(pll15_clk.c),
 	},
@@ -3517,15 +3523,16 @@ static struct clk_freq_tbl clk_tbl_gfx3d[] = {
 	F_GFX3D(192000000, pll8,  1,  2),
 	F_GFX3D(200000000, pll2,  1,  4),
 	F_GFX3D(228571000, pll2,  2,  7),
+// jollaman999
+// GPU Overclock
+#ifndef CONFIG_GPU_OVERCLOCK
 	F_GFX3D(266667000, pll2,  1,  3),
-// jollaman999
-// GPU Overclock
-	F_GFX3D(325000000, pll2,  2,  5),
+#endif /* CONFIG_GPU_OVERCLOCK */
+	F_GFX3D(320000000, pll2,  2,  5),
 	F_GFX3D(400000000, pll2,  1,  2),
-// jollaman999
-// GPU Overclock
 #ifdef CONFIG_GPU_OVERCLOCK
-	F_GFX3D(544000000, pll15, 1,  2),
+	F_GFX3D(533000000, pll2,  2,  3),
+	F_GFX3D(607500000, pll15, 1,  2),
 #else
 	F_GFX3D(450000000, pll15, 1,  2),
 #endif /* CONFIG_GPU_OVERCLOCK */
@@ -3546,21 +3553,29 @@ static struct clk_freq_tbl clk_tbl_gfx3d_8960[] = {
 	F_GFX3D(177778000, pll2, 2,  9),
 	F_GFX3D(200000000, pll2, 1,  4),
 	F_GFX3D(228571000, pll2, 2,  7),
-	F_GFX3D(266667000, pll2, 1,  3),
-	F_GFX3D(300000000, pll3, 1,  4),
+// jollaman999
 // GPU Overclock
-	F_GFX3D(325000000, pll2, 2,  5),
-	F_GFX3D(400000000, pll2, 1,  2),
+#ifndef CONFIG_GPU_OVERCLOCK
+	F_GFX3D(266667000, pll2,  1,  3),
+#endif /* CONFIG_GPU_OVERCLOCK */
+	F_GFX3D(320000000, pll2,  2,  5),
+	F_GFX3D(400000000, pll2,  1,  2),
+#ifdef CONFIG_GPU_OVERCLOCK
+	F_GFX3D(533000000, pll2,  2,  3),
+	F_GFX3D(607500000, pll15, 1,  2),
+#else
+	F_GFX3D(450000000, pll15, 1,  2),
+#endif /* CONFIG_GPU_OVERCLOCK */
 	F_END
 };
 
 static unsigned long fmax_gfx3d_8064ab[MAX_VDD_LEVELS] __initdata = {
 	[VDD_DIG_LOW]     = 128000000,
+	[VDD_DIG_NOMINAL] = 320000000,
 // jollaman999
 // GPU Overclock
-	[VDD_DIG_NOMINAL] = 325000000,
 #ifdef CONFIG_GPU_OVERCLOCK
-	[VDD_DIG_HIGH]    = 544000000
+	[VDD_DIG_HIGH]    = 607500000
 #else
 	[VDD_DIG_HIGH]    = 450000000
 #endif /* CONFIG_GPU_OVERCLOCK */
@@ -3630,10 +3645,10 @@ static struct rcg_clk gfx3d_clk = {
 // jollaman999
 // GPU Overclock
 #ifdef CONFIG_GPU_OVERCLOCK
-		VDD_DIG_FMAX_MAP3(LOW,  128000000, NOMINAL, 325000000,
-				  HIGH, 544000000),
+		VDD_DIG_FMAX_MAP3(LOW,  128000000, NOMINAL, 320000000,
+				  HIGH, 607500000),
 #else
-		VDD_DIG_FMAX_MAP3(LOW,  128000000, NOMINAL, 325000000,
+		VDD_DIG_FMAX_MAP3(LOW,  128000000, NOMINAL, 320000000,
 				  HIGH, 450000000),
 #endif /* CONFIG_GPU_OVERCLOCK */
 		CLK_INIT(gfx3d_clk.c),
@@ -6673,8 +6688,8 @@ static void __init reg_init(void)
 		Got hint from : http://forum.xda-developers.com/showthread.php?t=2307086
 		*/
 #ifdef CONFIG_GPU_OVERCLOCK
-		// /* Program PLL15 to 1089MHZ */ (1089 / 27MHz = 40, 40 = 0x28)
-		pll15_config.l = 0x28 | BVAL(31, 7, 0x620);
+		// /* Program PLL15 to 1215MHZ */ (1215 / 27MHz = 45, 45 = 0x2D)
+		pll15_config.l = 0x2D | BVAL(31, 7, 0x620);
 #else
 		// /* Program PLL15 to 900MHZ */ (0x21 = 33, 900 / 33 = 27MHz)
 		pll15_config.l = 0x21 | BVAL(31, 7, 0x620);
@@ -6727,11 +6742,11 @@ static void __init msm8960_clock_pre_init(void)
 	if (cpu_is_msm8960ab()) {
 		pll3_clk.c.rate = 650000000;
 		gfx3d_clk.c.fmax[VDD_DIG_LOW]     = 192000000;
+		gfx3d_clk.c.fmax[VDD_DIG_NOMINAL] = 320000000;
 // jollaman999
 // GPU Overclock
-		gfx3d_clk.c.fmax[VDD_DIG_NOMINAL] = 325000000;
 #ifdef CONFIG_GPU_OVERCLOCK
-		gfx3d_clk.c.fmax[VDD_DIG_HIGH]    = 544000000;
+		gfx3d_clk.c.fmax[VDD_DIG_HIGH]    = 607500000;
 #else
 		gfx3d_clk.c.fmax[VDD_DIG_HIGH]    = 450000000;
 #endif /* CONFIG_GPU_OVERCLOCK */
@@ -6805,7 +6820,7 @@ static void __init msm8960_clock_pre_init(void)
 // jollaman999
 // GPU Overclock
 #ifdef CONFIG_GPU_OVERCLOCK
-		pll15_clk.c.rate = 1089000000;
+		pll15_clk.c.rate = 1215000000;
 #else
 		pll15_clk.c.rate = 900000000;
 #endif /* CONFIG_GPU_OVERCLOCK */
@@ -6919,9 +6934,7 @@ static int __init msm8960_clock_late_init(void)
 	if (WARN(IS_ERR(cfpb_a_clk), "cfpb_a_clk not found (%ld)\n",
 			PTR_ERR(cfpb_a_clk)))
 		return PTR_ERR(cfpb_a_clk);
-// jollaman999
-// GPU Overclock
-	rc = clk_set_rate(cfpb_a_clk, 32500000);
+	rc = clk_set_rate(cfpb_a_clk, 32000000);
 	if (WARN(rc, "cfpb_a_clk rate was not set (%d)\n", rc))
 		return rc;
 	rc = clk_prepare_enable(cfpb_a_clk);
