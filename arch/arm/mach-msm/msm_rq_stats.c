@@ -157,11 +157,6 @@ static unsigned int report_load_at_max_freq(void)
 	return total_load;
 }
 
-unsigned int report_max_load_max_freq(void)
-{
-	return max_load_maxfreq;
-}
-
 static int cpufreq_transition_handler(struct notifier_block *nb,
 			unsigned long val, void *data)
 {
@@ -249,7 +244,6 @@ static ssize_t store_hotplug_disable(struct kobject *kobj,
 
 static ssize_t show_hotplug_disable(struct kobject *kobj,
 				    struct kobj_attribute *attr, char *buf)
-		struct kobj_attribute *attr, char *buf)
 {
 	return snprintf(buf, MAX_LONG_SIZE, "%d\n", rq_info.hotplug_disabled);
 }
