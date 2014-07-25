@@ -441,7 +441,6 @@ static int __init msm_rq_stats_early_init(void)
 	rq_info.init = 0;
 	return -ENOSYS;
 #endif
-	}
 
 	pm_notifier(system_suspend_handler, 0);
 	return 0;
