@@ -25,7 +25,7 @@
 // jollaman999
 // GPU Overclock
 #ifdef CONFIG_GPU_OVERCLOCK
-#define KGSL_MAX_PWRLEVELS 12
+#define KGSL_MAX_PWRLEVELS 15
 #else
 #define KGSL_MAX_PWRLEVELS 10
 #endif /* CONFIG_GPU_OVERCLOCK */
