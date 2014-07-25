@@ -1009,6 +1009,7 @@ static ssize_t store_update_rates(struct device *dev,
 				 struct device_attribute *msm_hotplug_attrs,
 				 const char *buf, size_t count)
 {
+	int ntokens;
 	unsigned int *new_update_rates = NULL;
 	unsigned long flags;
 
