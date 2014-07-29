@@ -3268,7 +3268,7 @@ CONFIG_IOMMU_PGTABLES_L2=y
 #
 # LGE Broadcast Device Support
 #
-# CONFIG_LGE_BROADCAST_TDMB=y
+# CONFIG_LGE_BROADCAST_TDMB is not set
 
 #
 # LGE Japanese Mobile Broadcast(ISDB-T 1seg/ISDB-Tmm 13seg) Device Support
@@ -3277,7 +3277,7 @@ CONFIG_IOMMU_PGTABLES_L2=y
 #
 # BROADCAST_DEVICE
 #
-# CONFIG_LGE_BROADCAST_TDMB_FC8050=y
+# CONFIG_LGE_BROADCAST_TDMB_FC8050 is not set
 
 #
 # LGE Felica selection
