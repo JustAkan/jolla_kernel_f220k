@@ -701,6 +701,30 @@ static struct pvs_table pvs_tables[NUM_SPEED_BINS][NUM_PVS] __initdata = {
 
 #ifdef CONFIG_LGE_PM
 #if defined(CONFIG_MACH_APQ8064_GK_KR)||defined(CONFIG_MACH_APQ8064_GKATT)||defined(CONFIG_MACH_APQ8064_GVDCM)||defined(CONFIG_MACH_APQ8064_GV_KR)|| defined(CONFIG_MACH_APQ8064_GKGLOBAL)
+static struct pvs_table pvs_tables_factory_1026[NUM_SPEED_BINS][NUM_PVS] __initdata = {
+	[0][PVS_SLOW]    = {tbl_slow_factory_1026, sizeof(tbl_slow_factory_1026),     0 },
+	[0][PVS_NOMINAL] = {tbl_nom_factory_1026,  sizeof(tbl_nom_factory_1026),  25000 },
+	[0][PVS_FAST]    = {tbl_fast_factory_1026, sizeof(tbl_fast_factory_1026), 25000 },
+	[0][PVS_FASTER]  = {tbl_fast_factory_1026, sizeof(tbl_fast_factory_1026), 25000 },
+
+	[1][0] = { tbl_PVS0_1700MHz_factory_1026, sizeof(tbl_PVS0_1700MHz_factory_1026),     0 },
+	[1][1] = { tbl_PVS1_1700MHz_factory_1026, sizeof(tbl_PVS1_1700MHz_factory_1026),     25000 },
+	[1][2] = { tbl_PVS2_1700MHz_factory_1026, sizeof(tbl_PVS2_1700MHz_factory_1026),     25000 },
+	[1][3] = { tbl_PVS3_1700MHz_factory_1026, sizeof(tbl_PVS3_1700MHz_factory_1026),     25000 },
+	[1][4] = { tbl_PVS4_1700MHz_factory_1026, sizeof(tbl_PVS4_1700MHz_factory_1026),     25000 },
+	[1][5] = { tbl_PVS5_1700MHz_factory_1026, sizeof(tbl_PVS5_1700MHz_factory_1026),     25000 },
+	[1][6] = { tbl_PVS6_1700MHz_factory_1026, sizeof(tbl_PVS6_1700MHz_factory_1026),     25000 },
+
+	[2][0] = { tbl_PVS0_2000MHz, sizeof(tbl_PVS0_2000MHz),     0 },
+	[2][1] = { tbl_PVS1_2000MHz, sizeof(tbl_PVS1_2000MHz),     25000 },
+	[2][2] = { tbl_PVS2_2000MHz, sizeof(tbl_PVS2_2000MHz),     25000 },
+	[2][3] = { tbl_PVS3_2000MHz, sizeof(tbl_PVS3_2000MHz),     25000 },
+	[2][4] = { tbl_PVS4_2000MHz, sizeof(tbl_PVS4_2000MHz),     25000 },
+	[2][5] = { tbl_PVS5_2000MHz, sizeof(tbl_PVS5_2000MHz),     25000 },
+	[2][6] = { tbl_PVS6_2000MHz, sizeof(tbl_PVS6_2000MHz),     25000 },
+
+};
+
 static struct pvs_table pvs_tables_factory_1134[NUM_SPEED_BINS][NUM_PVS] __initdata = {
 	[0][PVS_SLOW]    = {tbl_slow_factory_1134, sizeof(tbl_slow_factory_1134),     0 },
 	[0][PVS_NOMINAL] = {tbl_nom_factory_1134,  sizeof(tbl_nom_factory_1134),  25000 },
