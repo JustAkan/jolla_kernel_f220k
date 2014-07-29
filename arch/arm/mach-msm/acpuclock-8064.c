@@ -742,6 +742,36 @@ static struct acpuclk_krait_params acpuclk_8064_params __initdata = {
 
 static int __init acpuclk_8064_probe(struct platform_device *pdev)
 {
+#ifdef CONFIG_LGE_PM
+	/* Krait freq table set for factory boot mode */
+	if (lge_get_factory_boot()) 
+	{
+#if defined(CONFIG_MACH_APQ8064_GK_KR)||defined(CONFIG_MACH_APQ8064_GKATT)||defined(CONFIG_MACH_APQ8064_GVDCM)
+		if(lge_get_boot_cable_type() == LGE_BOOT_LT_CABLE_56K ||
+			lge_get_boot_cable_type() == LGE_BOOT_LT_CABLE_130K)	
+		{
+			pr_info("select pvs_tables to factory_1026\n");
+			acpuclk_8064_params.pvs_tables = pvs_tables_factory_1026;
+		}
+		else
+		{
+			pr_info("select pvs_tables to factory_1134\n");
+			acpuclk_8064_params.pvs_tables = pvs_tables_factory_1134;
+		}
+
+#else
+		pr_info("select pvs_tables to factory_1026\n");
+		acpuclk_8064_params.pvs_tables = pvs_tables_factory_1026;
+#endif
+	}
+#endif //CONFIG_LGE_PM
+
+	if (cpu_is_apq8064ab() ||
+		SOCINFO_VERSION_MAJOR(socinfo_get_version()) == 2) {
+		acpuclk_8064_params.hfpll_data->low_vdd_l_max = 37;
+		acpuclk_8064_params.hfpll_data->nom_vdd_l_max = 74;
+	}
+
 	return acpuclk_krait_init(&pdev->dev, &acpuclk_8064_params);
 }
 
