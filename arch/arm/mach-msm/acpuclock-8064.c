@@ -533,6 +533,83 @@ static struct acpu_level tbl_PVS6_2000MHz[] __initdata = {
 
 #ifdef CONFIG_LGE_PM
 #if defined(CONFIG_MACH_APQ8064_GK_KR)||defined(CONFIG_MACH_APQ8064_GKATT)||defined(CONFIG_MACH_APQ8064_GVDCM)||defined(CONFIG_MACH_APQ8064_GV_KR)||defined(CONFIG_MACH_APQ8064_GKGLOBAL)
+static struct acpu_level tbl_PVS0_1700MHz_factory_1026[] __initdata = {
+	{ 1, {	 384000, PLL_8, 0, 0x00 }, L2(0),   950000 },
+	{ 1, {	 486000, HFPLL, 2, 0x24 }, L2(6),   950000 },
+	{ 1, {	 594000, HFPLL, 1, 0x16 }, L2(6),   950000 },
+	{ 1, {	 702000, HFPLL, 1, 0x1A }, L2(6),   962500 },
+	{ 1, {	 810000, HFPLL, 1, 0x1E }, L2(6),  1000000 },
+	{ 1, {	 918000, HFPLL, 1, 0x22 }, L2(6),  1025000 },
+	{ 1, {	1026000, HFPLL, 1, 0x26 }, L2(6),  1037500 },
+	{ 0, { 0 } }
+};
+
+static struct acpu_level tbl_PVS1_1700MHz_factory_1026[] __initdata = {
+	{ 1, {	 384000, PLL_8, 0, 0x00 }, L2(0),   950000 },
+	{ 1, {	 486000, HFPLL, 2, 0x24 }, L2(6),   950000 },
+	{ 1, {	 594000, HFPLL, 1, 0x16 }, L2(6),   950000 },
+	{ 1, {	 702000, HFPLL, 1, 0x1A }, L2(6),   962500 },
+	{ 1, {	 810000, HFPLL, 1, 0x1E }, L2(6),   975000 },
+	{ 1, {	 918000, HFPLL, 1, 0x22 }, L2(6),  1000000 },
+	{ 1, {	1026000, HFPLL, 1, 0x26 }, L2(6),  1012500 },
+	{ 0, { 0 } }
+};
+
+static struct acpu_level tbl_PVS2_1700MHz_factory_1026[] __initdata = {
+	{ 1, {	 384000, PLL_8, 0, 0x00 }, L2(0),   925000 },
+	{ 1, {	 486000, HFPLL, 2, 0x24 }, L2(6),   925000 },
+	{ 1, {	 594000, HFPLL, 1, 0x16 }, L2(6),   925000 },
+	{ 1, {	 702000, HFPLL, 1, 0x1A }, L2(6),   925000 },
+	{ 1, {	 810000, HFPLL, 1, 0x1E }, L2(6),   937500 },
+	{ 1, {	 918000, HFPLL, 1, 0x22 }, L2(6),   950000 },
+	{ 1, {	1026000, HFPLL, 1, 0x26 }, L2(6),   975000 },
+	{ 0, { 0 } }
+};
+
+static struct acpu_level tbl_PVS3_1700MHz_factory_1026[] __initdata = {
+	{ 1, {	 384000, PLL_8, 0, 0x00 }, L2(0),   900000 },
+	{ 1, {	 486000, HFPLL, 2, 0x24 }, L2(6),   900000 },
+	{ 1, {	 594000, HFPLL, 1, 0x16 }, L2(6),   900000 },
+	{ 1, {	 702000, HFPLL, 1, 0x1A }, L2(6),   900000 },
+	{ 1, {	 810000, HFPLL, 1, 0x1E }, L2(6),   900000 },
+	{ 1, {	 918000, HFPLL, 1, 0x22 }, L2(6),   925000 },
+	{ 1, {	1026000, HFPLL, 1, 0x26 }, L2(6),   950000 },
+	{ 0, { 0 } }
+};
+
+static struct acpu_level tbl_PVS4_1700MHz_factory_1026[] __initdata = {
+	{ 1, {	 384000, PLL_8, 0, 0x00 }, L2(0),   875000 },
+	{ 1, {	 486000, HFPLL, 2, 0x24 }, L2(6),   875000 },
+	{ 1, {	 594000, HFPLL, 1, 0x16 }, L2(6),   875000 },
+	{ 1, {	 702000, HFPLL, 1, 0x1A }, L2(6),   875000 },
+	{ 1, {	 810000, HFPLL, 1, 0x1E }, L2(6),   887500 },
+	{ 1, {	 918000, HFPLL, 1, 0x22 }, L2(6),   900000 },
+	{ 1, {	1026000, HFPLL, 1, 0x26 }, L2(6),   925000 },
+	{ 0, { 0 } }
+};
+
+static struct acpu_level tbl_PVS5_1700MHz_factory_1026[] __initdata = {
+	{ 1, {	 384000, PLL_8, 0, 0x00 }, L2(0),   875000 },
+	{ 1, {	 486000, HFPLL, 2, 0x24 }, L2(6),   875000 },
+	{ 1, {	 594000, HFPLL, 1, 0x16 }, L2(6),   875000 },
+	{ 1, {	 702000, HFPLL, 1, 0x1A }, L2(6),   875000 },
+	{ 1, {	 810000, HFPLL, 1, 0x1E }, L2(6),   887500 },
+	{ 1, {	 918000, HFPLL, 1, 0x22 }, L2(6),   900000 },
+	{ 1, {	1026000, HFPLL, 1, 0x26 }, L2(6),   925000 },
+	{ 0, { 0 } }
+};
+
+static struct acpu_level tbl_PVS6_1700MHz_factory_1026[] __initdata = {
+	{ 1, {	 384000, PLL_8, 0, 0x00 }, L2(0),   875000 },
+	{ 1, {	 486000, HFPLL, 2, 0x24 }, L2(6),   875000 },
+	{ 1, {	 594000, HFPLL, 1, 0x16 }, L2(6),   875000 },
+	{ 1, {	 702000, HFPLL, 1, 0x1A }, L2(6),   875000 },
+	{ 1, {	 810000, HFPLL, 1, 0x1E }, L2(6),   887500 },
+	{ 1, {	 918000, HFPLL, 1, 0x22 }, L2(6),   900000 },
+	{ 1, {	1026000, HFPLL, 1, 0x26 }, L2(6),   925000 },
+	{ 0, { 0 } }
+};
+
 static struct acpu_level tbl_slow_factory_1134[] __initdata = {
 	{ 1, {   384000, PLL_8, 0, 0x00 }, L2(0),   975000 },
 	{ 0, {   432000, HFPLL, 2, 0x20 }, L2(6),  1000000 },
