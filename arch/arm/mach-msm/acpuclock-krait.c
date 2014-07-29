@@ -53,6 +53,11 @@
 int g_speed_bin;
 int g_pvs_bin;
 
+#if defined(CONFIG_MACH_APQ8064_GK_KR) || defined(CONFIG_MACH_APQ8064_GKATT)\
+		|| defined(CONFIG_MACH_APQ8064_GVDCM) || defined(CONFIG_MACH_APQ8064_GV_KR) || defined(CONFIG_MACH_APQ8064_GKGLOBAL)
+int limit_cpufreq = 0;
+#endif
+
 static DEFINE_MUTEX(driver_lock);
 static DEFINE_SPINLOCK(l2_lock);
 
@@ -453,6 +458,13 @@ static int acpuclk_krait_set_rate(int cpu, unsigned long rate,
 	struct vdd_data vdd_data;
 	unsigned long flags;
 	int rc = 0;
+
+#if defined(CONFIG_MACH_APQ8064_GK_KR) || defined(CONFIG_MACH_APQ8064_GKATT)\
+		|| defined(CONFIG_MACH_APQ8064_GVDCM) || defined(CONFIG_MACH_APQ8064_GV_KR) || defined(CONFIG_MACH_APQ8064_GKGLOBAL)
+	if(limit_cpufreq) {
+		if(rate > 1242000) rate = 1242000;	
+	}
+#endif
 
 	if (cpu > num_possible_cpus())
 		return -EINVAL;

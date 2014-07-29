@@ -346,8 +346,75 @@ static struct ion_co_heap_pdata fw_co_apq8064_ion_pdata = {
  * to each other.
  * Don't swap the order unless you know what you are doing!
  */
+
+struct ion_platform_heap apq8064_heaps[] = {
+		{
+			.id	= ION_SYSTEM_HEAP_ID,
+			.type	= ION_HEAP_TYPE_SYSTEM,
+			.name	= ION_VMALLOC_HEAP_NAME,
+		},
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
+		{
+			.id	= ION_CP_MM_HEAP_ID,
+			.type	= ION_HEAP_TYPE_CP,
+			.name	= ION_MM_HEAP_NAME,
+			.size	= MSM_ION_MM_SIZE,
+			.memory_type = ION_EBI_TYPE,
+			.extra_data = (void *) &cp_mm_apq8064_ion_pdata,
+		},
+		{
+			.id	= ION_MM_FIRMWARE_HEAP_ID,
+			.type	= ION_HEAP_TYPE_CARVEOUT,
+			.name	= ION_MM_FIRMWARE_HEAP_NAME,
+			.size	= MSM_ION_MM_FW_SIZE,
+			.memory_type = ION_EBI_TYPE,
+			.extra_data = (void *) &fw_co_apq8064_ion_pdata,
+		},
+		{
+			.id	= ION_CP_MFC_HEAP_ID,
+			.type	= ION_HEAP_TYPE_CP,
+			.name	= ION_MFC_HEAP_NAME,
+			.size	= MSM_ION_MFC_SIZE,
+			.memory_type = ION_EBI_TYPE,
+			.extra_data = (void *) &cp_mfc_apq8064_ion_pdata,
+		},
+#ifndef CONFIG_MSM_IOMMU
+		{
+			.id	= ION_SF_HEAP_ID,
+			.type	= ION_HEAP_TYPE_CARVEOUT,
+			.name	= ION_SF_HEAP_NAME,
+			.size	= MSM_ION_SF_SIZE,
+			.memory_type = ION_EBI_TYPE,
+			.extra_data = (void *) &co_apq8064_ion_pdata,
+		},
+#endif
+		{
+			.id	= ION_IOMMU_HEAP_ID,
+			.type	= ION_HEAP_TYPE_IOMMU,
+			.name	= ION_IOMMU_HEAP_NAME,
+		},
+		{
+			.id	= ION_QSECOM_HEAP_ID,
+			.type	= ION_HEAP_TYPE_CARVEOUT,
+			.name	= ION_QSECOM_HEAP_NAME,
+			.size	= MSM_ION_QSECOM_SIZE,
+			.memory_type = ION_EBI_TYPE,
+			.extra_data = (void *) &co_apq8064_ion_pdata,
+		},
+		{
+			.id	= ION_AUDIO_HEAP_ID,
+			.type	= ION_HEAP_TYPE_CARVEOUT,
+			.name	= ION_AUDIO_HEAP_NAME,
+			.size	= MSM_ION_AUDIO_SIZE,
+			.memory_type = ION_EBI_TYPE,
+			.extra_data = (void *) &co_apq8064_ion_pdata,
+		},
+#endif
+};
 static struct ion_platform_data apq8064_ion_pdata = {
 	.nr = MSM_ION_HEAP_NUM,
+	.heaps = apq8064_heaps,
+/*
 	.heaps = {
 		{
 			.id	= ION_SYSTEM_HEAP_ID,
@@ -412,6 +479,7 @@ static struct ion_platform_data apq8064_ion_pdata = {
 		},
 #endif
 	}
+*/
 };
 
 static struct platform_device apq8064_ion_dev = {
@@ -487,7 +555,8 @@ static void __init reserve_ion_memory(void)
 		const struct ion_platform_heap *heap =
 			&(apq8064_ion_pdata.heaps[i]);
 
-		if (heap->type == ION_HEAP_TYPE_CP && heap->extra_data) {
+		if (heap->type == (enum ion_heap_type) ION_HEAP_TYPE_CP
+			&& heap->extra_data) {
 			struct ion_cp_heap_pdata *data = heap->extra_data;
 
 			reusable_count += (data->reusable) ? 1 : 0;
@@ -509,7 +578,7 @@ static void __init reserve_ion_memory(void)
 			int fixed_position = NOT_FIXED;
 			int mem_is_fmem = 0;
 
-			switch (heap->type) {
+			switch ((int)heap->type) {
 			case ION_HEAP_TYPE_CP:
 				mem_is_fmem = ((struct ion_cp_heap_pdata *)
 					heap->extra_data)->mem_is_fmem;
@@ -570,7 +639,7 @@ static void __init reserve_ion_memory(void)
 			int fixed_position = NOT_FIXED;
 			struct ion_cp_heap_pdata *pdata = NULL;
 
-			switch (heap->type) {
+			switch ((int)heap->type) {
 			case ION_HEAP_TYPE_CP:
 				pdata =
 				(struct ion_cp_heap_pdata *)heap->extra_data;
@@ -4037,6 +4106,7 @@ out:
 }
 #endif
 
+int (*change_memory_power)(u64, u64, int);
 static void __init apq8064_cdp_init(void)
 {
 	if (meminfo_init(SYS_MEMORY, SZ_256M) < 0)

@@ -877,8 +877,8 @@ static struct matrix_keymap_data keymap_data = {
 #if defined(CONFIG_MACH_APQ8064_GV_KR)
 /* Keymap GK_KR except for Rev.F (EV board) */
 static unsigned int keymap_gk_kr[] = {
-	KEY(0, 0, KEY_VOLUMEDOWN),
-	KEY(0, 1, KEY_VOLUMEUP),
+	KEY(0, 0, KEY_VOLUMEUP),
+	KEY(0, 1, KEY_VOLUMEDOWN),
 	KEY(1, 0, KEY_QUICK_CLIP),
 	KEY(1, 1, KEY_HOMEPAGE),
 };

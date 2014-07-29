@@ -325,6 +325,9 @@ static struct msm_bus_scale_pdata mdp_bus_scale_pdata = {
 static struct msm_panel_common_pdata mdp_pdata = {
 	.gpio = MDP_VSYNC_GPIO,
 	.mdp_max_clk = 266667000,
+	.mdp_max_bw = 3080000000UL,
+	.mdp_bw_ab_factor = 180,
+	.mdp_bw_ib_factor = 190,
 	.mdp_bus_scale_table = &mdp_bus_scale_pdata,
 	.mdp_rev = MDP_REV_44,
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
@@ -346,6 +349,9 @@ void __init apq8064_mdp_writeback(struct memtype_reserve* reserve_table)
 		mdp_pdata.ov0_wb_size;
 	reserve_table[mdp_pdata.mem_hid].size +=
 		mdp_pdata.ov1_wb_size;
+
+	pr_info("mem_map: mdp reserved with size 0x%lx in pool\n",
+			mdp_pdata.ov0_wb_size + mdp_pdata.ov1_wb_size);
 #endif
 }
 
@@ -451,11 +457,10 @@ static int mipi_dsi_panel_power(int on)
 	static int gpio22;	// DSV_LOAD_EN (PM8921_GPIO_22)
 	int rc;
 
-	pr_debug("%s: state : %d\n", __func__, on);
 
 	if (!dsi_power_on) /* LCD initial start (power side) */
        {
-	       printk(KERN_INFO "[LCD][DEBUG] %s: mipi lcd power initial\n", __func__);
+  	pr_info("%s: initial start\n", __func__);
 
 		reg_lvs6 = regulator_get(&msm_mipi_dsi1_device.dev, "dsi_iovcc");
 		if (IS_ERR(reg_lvs6)) {
@@ -1442,7 +1447,7 @@ static char vcom_setting_for_suspend    [8] = {
                     0xD5,
                     0x06, 0x00, 0x00, 0x00, 0x48,
                     0x00, 0x48
-};
+					};
 
 static char display_on                  [2] = {0x29,0x00};
 
@@ -1457,8 +1462,8 @@ static char deep_standby_mode           [2] = {0xB1,0x01};
 #if defined(CONFIG_LGE_R63311_COLOR_ENGINE)
 static char color_enhancement          [33] = {
                                    0xCA,
-                                   0x01, 0x70, 0xB0, 0xC8, 0xB0,
-                                   0xB0, 0x98, 0x90, 0x3F, 0x3F,
+                                   0x01, 0x70, 0x90, 0xA0, 0xB0,
+                                   0x98, 0x90, 0x90, 0x3F, 0x3F,
                                    0x80, 0x78, 0x08, 0x38, 0x08,
                                    0x3F, 0x08, 0x90, 0x0C, 0x0C,
                                    0x0A, 0x06, 0x04, 0x04, 0x00,
@@ -1509,7 +1514,7 @@ static char write_cabc_still_on      [2] = {0x55, 0x02};
 static char write_cabc_off           [2] = {0x55, 0x00};
 
 static char backlight_ctrl_ui          [8] = {0xBA, 0x00, 0x3F, 0x04, 0x40, 0x9F, 0x1F, 0xD7};
-static char backlight_ctrl_movie_still [8] = {0xB9, 0x00, 0x3F, 0x18, 0x18, 0x9F, 0x1F, 0x80};
+static char backlight_ctrl_movie_still [8] = {0xB9, 0x00, 0x02, 0x18, 0x18, 0x9F, 0x1F, 0x80};
 static char backlight_ctrl_common      [26]= {0xB8,
                                        0x18, 0x80, 0x18, 0x18,
                                        0xCF, 0x1F, 0x00, 0x0C,
