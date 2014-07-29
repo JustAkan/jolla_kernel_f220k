@@ -910,19 +910,9 @@ static int __init acpuclk_8064_probe(struct platform_device *pdev)
 			pr_info("select pvs_tables to factory_1134\n");
 			acpuclk_8064_params.pvs_tables = pvs_tables_factory_1134;
 		}
-
-#else
-		pr_info("select pvs_tables to factory_1026\n");
-		acpuclk_8064_params.pvs_tables = pvs_tables_factory_1026;
 #endif
 	}
 #endif //CONFIG_LGE_PM
-
-	if (cpu_is_apq8064ab() ||
-		SOCINFO_VERSION_MAJOR(socinfo_get_version()) == 2) {
-		acpuclk_8064_params.hfpll_data->low_vdd_l_max = 37;
-		acpuclk_8064_params.hfpll_data->nom_vdd_l_max = 74;
-	}
 
 	return acpuclk_krait_init(&pdev->dev, &acpuclk_8064_params);
 }
