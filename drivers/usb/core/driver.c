@@ -546,7 +546,7 @@ int usb_match_one_id(struct usb_interface *interface,
 	if (!usb_match_device(dev, id))
 		return 0;
 
-	/* The interface class, subclass, and protocol should never be
+	/* The interface class, subclass, protocol and number should never be
 	 * checked for a match if the device class is Vendor Specific,
 	 * unless the match record specifies the Vendor ID. */
 	if (dev->descriptor.bDeviceClass == USB_CLASS_VENDOR_SPEC &&
