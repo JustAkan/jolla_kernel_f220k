@@ -974,7 +974,6 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
 	/* Because we write directly to the reserved memory
 	 * region when loading crash kernels we need a mutex here to
 	 * prevent multiple crash  kernels from attempting to load
-	 * prevent multiple crash  kernels from attempting to load
 	 * simultaneously, and to prevent a crash kernel from loading
 	 * over the top of a in use crash kernel.
 	 *
@@ -1008,10 +1007,6 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
 
 		if (flags & KEXEC_PRESERVE_CONTEXT)
 			image->preserve_context = 1;
-			+#ifdef CONFIG_KEXEC_HARDBOOT
-		if (flags & KEXEC_HARDBOOT)
-			image->hardboot = 1;
-#endif
 		result = machine_kexec_prepare(image);
 		if (result)
 			goto out;
