@@ -621,10 +621,10 @@ void add_device_randomness(const void *buf, unsigned int size)
 {
 	unsigned long time = get_cycles() ^ jiffies;
 
-	mix_pool_bytes(&input_pool, buf, size, NULL);
-	mix_pool_bytes(&input_pool, &time, sizeof(time), NULL);
-	mix_pool_bytes(&nonblocking_pool, buf, size, NULL);
-	mix_pool_bytes(&nonblocking_pool, &time, sizeof(time), NULL);
+	mix_pool_bytes(&input_pool, buf, size);
+	mix_pool_bytes(&input_pool, &time, sizeof(time));
+	mix_pool_bytes(&nonblocking_pool, buf, size);
+	mix_pool_bytes(&nonblocking_pool, &time, sizeof(time));
 }
 EXPORT_SYMBOL(add_device_randomness);
 
