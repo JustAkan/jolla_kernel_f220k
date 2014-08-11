@@ -16,7 +16,7 @@
 #include <linux/platform_device.h>
 #include <linux/memory.h>
 #include <linux/persistent_ram.h>
-#include <linux/platform_data/ram_console.h>
+#include <ram_console.h>
 
 #include <asm/setup.h>
 #include <asm/sizes.h>
