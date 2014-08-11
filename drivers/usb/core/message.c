@@ -1543,6 +1543,7 @@ static int usb_if_uevent(struct device *dev, struct kobj_uevent_env *env)
 		   usb_dev->descriptor.bDeviceSubClass,
 		   usb_dev->descriptor.bDeviceProtocol,
 		   alt->desc.bInterfaceClass,
+		   alt->desc.bInterfaceSubClass,
 		   alt->desc.bInterfaceProtocol,
 		   alt->desc.bInterfaceNumber))
 		return -ENOMEM;
