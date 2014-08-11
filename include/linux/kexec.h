@@ -205,6 +205,9 @@ extern struct kimage *kexec_crash_image;
 #define KEXEC_ARCH_MIPS    ( 8 << 16)
 
 /* List of defined/legal kexec flags */
+#ifndef CONFIG_KEXEC_JUMP
+#define KEXEC_FLAGS    KEXEC_ON_CRASH
+#else
 #if defined(CONFIG_KEXEC_JUMP) && defined(CONFIG_KEXEC_HARDBOOT)
 #define KEXEC_FLAGS    (KEXEC_ON_CRASH | KEXEC_PRESERVE_CONTEXT | KEXEC_HARDBOOT)
 #elif defined(CONFIG_KEXEC_JUMP)
