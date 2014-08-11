@@ -568,6 +568,10 @@ int usb_match_one_id(struct usb_interface *interface,
 	    (id->bInterfaceProtocol != intf->desc.bInterfaceProtocol))
 		return 0;
 
+	if ((id->match_flags & USB_DEVICE_ID_MATCH_INT_NUMBER) &&
+	    (id->bInterfaceNumber != intf->desc.bInterfaceNumber))
+		return 0;
+
 	return 1;
 }
 EXPORT_SYMBOL_GPL(usb_match_one_id);

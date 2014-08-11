@@ -849,7 +849,8 @@ static ssize_t show_modalias(struct device *dev,
 			udev->descriptor.bDeviceProtocol,
 			alt->desc.bInterfaceClass,
 			alt->desc.bInterfaceSubClass,
-			alt->desc.bInterfaceProtocol);
+			alt->desc.bInterfaceProtocol,
+			alt->desc.bInterfaceNumber);
 }
 static DEVICE_ATTR(modalias, S_IRUGO, show_modalias, NULL);
 

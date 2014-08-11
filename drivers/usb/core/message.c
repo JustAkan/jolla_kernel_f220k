@@ -1530,7 +1530,8 @@ static int usb_if_uevent(struct device *dev, struct kobj_uevent_env *env)
 	if (add_uevent_var(env, "INTERFACE=%d/%d/%d",
 		   alt->desc.bInterfaceClass,
 		   alt->desc.bInterfaceSubClass,
-		   alt->desc.bInterfaceProtocol))
+		   alt->desc.bInterfaceProtocol,
+		   alt->desc.bInterfaceNumber))
 		return -ENOMEM;
 
 	if (add_uevent_var(env,
