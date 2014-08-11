@@ -553,8 +553,7 @@ int usb_match_one_id(struct usb_interface *interface,
 			!(id->match_flags & USB_DEVICE_ID_MATCH_VENDOR) &&
 			(id->match_flags & (USB_DEVICE_ID_MATCH_INT_CLASS |
 				USB_DEVICE_ID_MATCH_INT_SUBCLASS |
-				USB_DEVICE_ID_MATCH_INT_PROTOCOL |
-				USB_DEVICE_ID_MATCH_INT_NUMBER)))
+				USB_DEVICE_ID_MATCH_INT_PROTOCOL)))
 		return 0;
 
 	if ((id->match_flags & USB_DEVICE_ID_MATCH_INT_CLASS) &&
