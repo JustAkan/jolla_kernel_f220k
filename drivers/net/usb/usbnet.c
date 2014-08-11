@@ -35,7 +35,6 @@
 
 #include <linux/module.h>
 #include <linux/init.h>
-#include <linux/if_arp.h>
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
 #include <linux/ctype.h>
@@ -161,13 +160,6 @@ int usbnet_get_endpoints(struct usbnet *dev, struct usb_interface *intf)
 	dev->out = usb_sndbulkpipe (dev->udev,
 			out->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK);
 	dev->status = status;
-#ifdef LG_FW_HSIC_EMS_DEBUG /* secheol.pyo - endpoint logging */
-	printk("[%s] usbnet bulk_in_Addr = %d, bulk_out_Addr = %d,  bulk_in_endpoint = %d , bulk_out_endpoint = %d \n", __func__,
-		in->desc.bEndpointAddress,
-		out->desc.bEndpointAddress,
-		in->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK,
-		out->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK);
-#endif /* secheol.pyo - endpoint logging */
 	return 0;
 }
 EXPORT_SYMBOL_GPL(usbnet_get_endpoints);
@@ -340,10 +332,12 @@ static enum skb_state defer_bh(struct usbnet *dev, struct sk_buff *skb,
 void usbnet_defer_kevent (struct usbnet *dev, int work)
 {
 	set_bit (work, &dev->flags);
-	if (!schedule_work (&dev->kevent))
-		netdev_err(dev->net, "kevent %d may have been dropped\n", work);
-	else
+	if (!schedule_work (&dev->kevent)) {
+		if (net_ratelimit())
+			netdev_err(dev->net, "kevent %d may have been dropped\n", work);
+	} else {
 		netdev_dbg(dev->net, "kevent %d scheduled\n", work);
+	}
 }
 EXPORT_SYMBOL_GPL(usbnet_defer_kevent);
 
@@ -366,9 +360,6 @@ static int rx_submit (struct usbnet *dev, struct urb *urb, gfp_t flags)
 		usb_free_urb (urb);
 		return -ENOMEM;
 	}
-
-	if (dev->net->type != ARPHRD_RAWIP)
-		skb_reserve(skb, NET_IP_ALIGN);
 
 	entry = (struct skb_data *) skb->cb;
 	entry->urb = urb;
@@ -1175,6 +1166,7 @@ netdev_tx_t usbnet_start_xmit (struct sk_buff *skb,
 		usb_anchor_urb(urb, &dev->deferred);
 		/* no use to process more packets */
 		netif_stop_queue(net);
+		usb_put_urb(urb);
 		spin_unlock_irqrestore(&dev->txq.lock, flags);
 		netdev_dbg(dev->net, "Delaying transmission for resumption\n");
 		goto deferred;
@@ -1323,6 +1315,8 @@ void usbnet_disconnect (struct usb_interface *intf)
 	unregister_netdev (net);
 
 	cancel_work_sync(&dev->kevent);
+
+	usb_scuttle_anchored_urbs(&dev->deferred);
 
 	if (dev->driver_info->unbind)
 		dev->driver_info->unbind (dev, intf);

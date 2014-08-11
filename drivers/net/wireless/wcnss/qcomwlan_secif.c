@@ -1,4 +1,4 @@
-/* Copyright (c) 2011, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -60,4 +60,3 @@ void wcnss_wlan_crypto_free_ablkcipher(struct crypto_ablkcipher *tfm)
 	crypto_free_ablkcipher(tfm);
 }
 EXPORT_SYMBOL(wcnss_wlan_crypto_free_ablkcipher);
-

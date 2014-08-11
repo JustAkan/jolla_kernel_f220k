@@ -1,4 +1,4 @@
-/* Copyright (c) 2011, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -10,11 +10,10 @@
  * GNU General Public License for more details.
  */
 
-#ifndef __QCOM_WCNSS_DEVICE__H
-#define __QCOM_WCNSS_DEVICE__H
+#ifndef _WCNSS_PRE_ALLOC_H_
+#define _WCNSS_PRE_ALLOC_H_
 
-struct qcom_wcnss_opts {
-	bool has_48mhz_xo;
-};
+int wcnss_prealloc_init(void);
+void wcnss_prealloc_deinit(void);
 
-#endif /* __QCOM_WCNSS_DEVICE__H */
+#endif/* _WCNSS_PRE_ALLOC_H_ */
