@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -746,34 +746,6 @@ static int bam_rmnet_remove(struct platform_device *pdev)
 	return 0;
 }
 
-static int rmnet_debug_init(struct net_device *dev)
-{
-
-	struct device *d;
-	struct rmnet_private *p;
-	int err = 0;
-	d = &(dev->dev);
-	p = netdev_priv(dev);
-	p->timeout_us = 0;
-	p->wakeups_xmit = p->wakeups_rcv = 0;
-	err = device_create_file(d, &dev_attr_timeout);
-	if (err)
-		return err;
-	err = device_create_file(d, &dev_attr_wakeups_xmit);
-	if (err)
-		return err;
-	err = device_create_file(d, &dev_attr_wakeups_rcv);
-	if (err)
-		return err;
-	err = rmnet_debug_init_timeout_suspend(dev);
-	return err;
-}
-#else
-static int rmnet_debug_init(struct net_device *dev)
-{
-	return 0;
-}
-#endif
 static int __init rmnet_init(void)
 {
 	int ret;
@@ -862,4 +834,3 @@ static int __init rmnet_init(void)
 module_init(rmnet_init);
 MODULE_DESCRIPTION("MSM RMNET BAM TRANSPORT");
 MODULE_LICENSE("GPL v2");
-
