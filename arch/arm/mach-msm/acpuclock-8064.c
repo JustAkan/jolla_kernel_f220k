@@ -902,7 +902,7 @@ static int __init acpuclk_8064_probe(struct platform_device *pdev)
 	/* Krait freq table set for factory boot mode */
 	if (lge_get_factory_boot()) 
 	{
-#if defined(CONFIG_MACH_APQ8064_GK_KR)||defined(CONFIG_MACH_APQ8064_GKATT)||defined(CONFIG_MACH_APQ8064_GVDCM)
+#if defined(CONFIG_MACH_APQ8064_GK_KR)||defined(CONFIG_MACH_APQ8064_GKATT)||defined(CONFIG_MACH_APQ8064_GVDCM)||defined(CONFIG_MACH_APQ8064_GV_KR)
 		if(lge_get_boot_cable_type() == LGE_BOOT_LT_CABLE_56K ||
 			lge_get_boot_cable_type() == LGE_BOOT_LT_CABLE_130K)	
 		{
