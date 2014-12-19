@@ -69,9 +69,12 @@ void freeze_wake(void)
 }
 EXPORT_SYMBOL_GPL(freeze_wake);
 
+<<<<<<< HEAD
 #ifdef CONFIG_MACH_LGE
 static int suspend_monitor_id;
 #endif
+=======
+>>>>>>> 93191e8... PM: Introduce suspend state PM_SUSPEND_FREEZE - From Solid_Kernel-Cyano
 /**
  * suspend_set_ops - Set the global suspend method table.
  * @ops: Suspend operations to use.
@@ -326,8 +329,15 @@ static int enter_state(suspend_state_t state)
 	if (!mutex_trylock(&pm_mutex))
 		return -EBUSY;
 
+<<<<<<< HEAD
 if (state == PM_SUSPEND_FREEZE)
 		freeze_begin();
+=======
+	if (state == PM_SUSPEND_FREEZE)
+		freeze_begin();
+
+	suspend_sys_sync_queue();
+>>>>>>> 93191e8... PM: Introduce suspend state PM_SUSPEND_FREEZE - From Solid_Kernel-Cyano
 
 	suspend_sys_sync_queue();
 	pr_debug("PM: Preparing system for %s sleep\n", pm_states[state]);
