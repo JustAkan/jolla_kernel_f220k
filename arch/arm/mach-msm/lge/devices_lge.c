@@ -35,10 +35,6 @@
 #include "lge_boot_time_checker.h"
 #endif
 
-#ifdef CONFIG_KEXEC_HARDBOOT
-#include <linux/memblock.h>
-#endif
-
 /* setting whether uart console is enalbed or disabled */
 static int uart_console_mode = 0;
 
@@ -441,30 +437,8 @@ void __init lge_add_ramconsole_devices(void)
 	res->start = PHYS_OFFSET + bank->size;
 	res->end = res->start + LGE_RAM_CONSOLE_SIZE - 1;
 
-<<<<<<< HEAD
 	printk(KERN_INFO "RAM CONSOLE START ADDR : %X\n", res->start);
 	printk(KERN_INFO "RAM CONSOLE END ADDR   : %X\n", res->end);
-=======
-	persistent_ram_early_init(pram);
-}
-#endif
-
-void __init lge_reserve(void)
-{
-#ifdef CONFIG_KEXEC_HARDBOOT
-	// Reserve space for hardboot page, just before the ram_console
-	struct membank* bank = &meminfo.bank[0];
-	phys_addr_t start = bank->start + bank->size - SZ_1M - LGE_PERSISTENT_RAM_SIZE;
-	int ret = memblock_remove(start, SZ_1M);
-	if(!ret)
-		pr_info("Hardboot page reserved at 0x%X\n", start);
-	else
-		pr_err("Failed to reserve space for hardboot page at 0x%X!\n", start);
-#endif
-
-	lge_add_persistent_ram();
-}
->>>>>>> a7783b5... Kexec Hardboot Patch - Thanks for Tasssadar
 
 	platform_device_register(&ram_console_device);
 }

@@ -33,21 +33,12 @@ static inline void pm_restore_console(void)
 
 typedef int __bitwise suspend_state_t;
 
-<<<<<<< HEAD
 #define PM_SUSPEND_ON		     ((__force suspend_state_t) 0)
 #define PM_SUSPEND_FREEZE	   ((__force suspend_state_t) 1)
 #define PM_SUSPEND_STANDBY   ((__force suspend_state_t) 2)
 #define PM_SUSPEND_MEM		   ((__force suspend_state_t) 3)
 #define PM_SUSPEND_MIN		   PM_SUSPEND_FREEZE
 #define PM_SUSPEND_MAX		   ((__force suspend_state_t) 4)
-=======
-#define PM_SUSPEND_ON		((__force suspend_state_t) 0)
-#define PM_SUSPEND_FREEZE	((__force suspend_state_t) 1)
-#define PM_SUSPEND_STANDBY	((__force suspend_state_t) 2)
-#define PM_SUSPEND_MEM		((__force suspend_state_t) 3)
-#define PM_SUSPEND_MIN		PM_SUSPEND_FREEZE
-#define PM_SUSPEND_MAX		((__force suspend_state_t) 4)
->>>>>>> 93191e8... PM: Introduce suspend state PM_SUSPEND_FREEZE - From Solid_Kernel-Cyano
 
 enum suspend_stat_step {
 	SUSPEND_FREEZE = 1,
